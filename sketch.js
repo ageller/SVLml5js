@@ -1,79 +1,121 @@
 let classifier = null;
 let featureExtractor = null;
 let video;
-let loss;
 let label = 'loading model';
 let canvas;
+let readyVideo = false;
+let readyModel = false;
+let classifying = false;
+let aspect = 9./12. //this is the  aspect (y/x) of my webcam 
+let vWidth;
+let vHeight;
 
-function createTrainingButton(delay){
-	var div = createDiv().parent(select("#infoDiv"));
-	var input = createInput().parent(div);
-	var button = createButton('record').parent(div); //p5
-	button.mousePressed(function () {
-		const feature = input.value();
-		console.log(feature)
-		var t = setInterval(function(){ //do this every delay ms
-			console.log(feature)
-			classifier.addImage(feature);
-			if (!mouseIsPressed) {
-				select('#trainingNumber').html(classifier.mapStringToIndex.length);
-				clearInterval(t);
-			}
-		},delay);
+let shrink = 0.2; //fraction to shrink down the video when showing image
 
-	});
+let t = d3.transition().duration(10000);
+
+function resetInfo(){
+	var cvs = d3.select('#videoDiv').select('canvas');
+	cvs.transition(t)
+		.attr('width',vWidth)
+		.attr('height',vHeight)
+		.style('width',vWidth+'px')
+		.style('height',vHeight+'px');
+
+	var iDiv = d3.select('#infoDiv')
+
+	iDiv.select('#objectName').html('')
+}
+function updateInfo(objectName){
+	//shrink the video
+	var cvs = d3.select('#videoDiv').select('canvas');
+	var w = cvs.attr('width');
+	var h = cvs.attr('height');
+	cvs.transition(t)
+		.attr('width',w*shrink)
+		.attr('height',h*shrink)
+		.style('width',w*shrink+'px')
+		.style('height',h*shrink+'px')
+	var iDiv = d3.select('#infoDiv')
+
+	iDiv.select('#objectName').html(objectName)
+
+
+}
+//set all the sizes
+function preload(){
+	console.log('resizing...')
+
+	var m = 10; //margin
+	var b = 50; //button height
+	var w = parseFloat(window.innerWidth)/2. - 3.*m;
+	var h = parseFloat(window.innerHeight) - 2.*m;
+
+	//size this based on the screen
+	var sze = Math.max(w, h);
+	vWidth = sze;
+	vHeight = vWidth*aspect;
+	if (vHeight > h){
+		vHeight = h;
+		vWidth = vHeight/aspect;
+	}
+
+	d3.select('#videoDiv')
+		.style('position','absolute')
+		.style('top',m + 'px')
+		.style('left',m +'px')
+		.style('padding','0')
+		.style('margin','0')
+		.style('width',vWidth + 'px')
+		.style('height',vHeight + 'px')
+	d3.select('#infoDiv')
+		.style('position','absolute')
+		.style('top',m + 'px')
+		.style('left',(vWidth + 2.*m) +'px')
+		.style('margin',0)
+		.style('padding','0')
+		.style('width',parseFloat(window.innerWidth) - vWidth - 3.*m + 'px')
+		.style('height',vHeight - b - m + 'px')
+
+
+	d3.select('#resetButton')
+		.style('position','absolute')
+		.style('top',m + vHeight - b + 'px')
+		.style('left',(vWidth + 2.*m) +'px')
+		.style('margin',0)
+		.style('padding','0')
+		.style('width',parseFloat(window.innerWidth) - vWidth - 3.*m + 'px')
+		.style('height',b + 'px')
+
+
+
+	var iWidth = parseFloat(window.innerWidth) - parseFloat(w);
+	d3.select('#infoDiv').attr('width', iWidth+"px");
+
+	var cvs = d3.select('#videoDiv').select('canvas');
+	if (cvs != null){
+		resizeCanvas(vWidth, vHeight);
+	}
+
+
+
 }
 
+
 function setup(){
-	
-	// Create a camera input
-	canvas = createCanvas(320, 270).parent(select('#videoDiv'));
+	createCanvas(vWidth, vHeight).parent(select('#videoDiv'));
 	video = createCapture(VIDEO);
 	video.hide();
 	background(0);
-  	//video.hide();
 
+	initializeML();
+	loadSavedModel();
 
-
-	div = createDiv().parent(select("#infoDiv")).style('margin-bottom:20px');
-	loadButton = createButton('load').parent(div);
-	loadButton.mousePressed(function () {
-		initializeML();
-		loadSavedModel();
-	});
-
-	var div = createDiv("Number of classes to add to training set : ").parent(select("#infoDiv"));
-	var input = createInput().parent(div);
-	var button = createButton('submit').parent(div); //p5
-	button.mousePressed(function () {
-		initializeML(numClasses=parseInt(input.value()));
-	})
-
-
-	createTrainingButton(250);
-
-	div = createDiv().parent(select("#infoDiv"));
-	trainButton = createButton('train').parent(div);
-	trainButton.mousePressed(function () {
-		classifier.train(whileTraining);
-	});
-
-	saveButton = createButton('save').parent(div).style('margin-top:10px');
-	saveButton.mousePressed(function () {
-		classifier.save();
-	});
-
-	div = createDiv().parent(select("#infoDiv")).style('margin-top:20px');
-	saveButton = createButton('begin').parent(div);
-	saveButton.mousePressed(function () {
-		classify();
-	});
 
 }
 
 function initializeML(numClasses=null){
 	// Extract the already learned features from MobileNet (eventually we want to only use our own training set)
-	console.log(numClasses)
 	if (featureExtractor == null){
 		featureExtractor = ml5.featureExtractor('MobileNet', modelReady);
 	} else {
@@ -90,40 +132,38 @@ function initializeML(numClasses=null){
 
 function draw() {
 	background(0);
-	image(video, 0, 0, 320, 240);
+	var cvs = d3.select('#videoDiv').select('canvas');
+	var w = cvs.attr('width');
+	var h = cvs.attr('height');
+	image(video, 0, 0, w, h);
 	fill(255);
 	textSize(16);
 	text(label, 10, height - 10);
+
+	if (readyModel && readyVideo && !classifying){
+		classify();
+	}
 }
 
 
 
 function modelReady(){
-	select('#modelStatus').html('Base Model (MobileNet) Loaded!');
+	console.log('Base Model (MobileNet) Loaded!');
+	readyModel = true;
 }
 
-function whileTraining(lossValue) {
-	if (lossValue) {
-		loss = lossValue;
-		select('#trainingStatus').html('Loss: ' + loss);
-	} else {
-		select('#trainingStatus').html('Done Training! Final Loss: ' + loss);
-	}
-}
 
 function videoReady() {
-	// Change the status of the model once its ready
-	select('#videoStatus').html('Video ready');
-	//classify();
-
+	console.log('Video ready');
+	readyVideo = true;
 }
 
 function loadSavedModel(){
 	classifier.load('./model/model.json', function() {
-		select('#modelStatus').html('Custom Model Loaded!');
+		console.log('Custom Model Loaded!');
 	});
 	console.log(classifier)
-	select('#trainingNumber').html(classifier.numClasses);
+	console.log(classifier.numClasses);
 
 }
 // Get a prediction for the current video frame
@@ -134,9 +174,11 @@ function classify() {
 
 // Show the results
 function gotResults(err, results) {
-	//console.log("checking",err, results)
+
+	//need something in here to check if the result is finalized
+	//then I will update the infoDiv
+
 	// Display any error
-	//console.log(results)
 	if (results == "casA"){
 		console.log("checking", results, err)
 	}
@@ -144,8 +186,18 @@ function gotResults(err, results) {
 		console.error(err);
 	}
 	if (results && results[0]) {
-		//select('#result').html(results[0].className + "<br/> with probability "+nf(results[0].probability,0,2));
-		select('#result').html(results);
-		classify();
+		label = results;
   }
 }
+
+
+///////////////////////////
+window.addEventListener("resize", preload)
+d3.select('#resetButton').on('click',function(e){
+	resetInfo('Eta Carina');
+})
+//for testing
+d3.select('#infoDiv').on('click',function(e){
+	console.log('testing')
+	updateInfo('Eta Carina');
+})
