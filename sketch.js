@@ -9,37 +9,57 @@ let classifying = false;
 let aspect = 9./12. //this is the  aspect (y/x) of my webcam 
 let vWidth;
 let vHeight;
+let menuWidth = 0.25*parseFloat(window.innerWidth);
+let menuLeft = parseFloat(window.innerWidth);
+let menuVisible = false;
 
 let shrink = 0.2; //fraction to shrink down the video when showing image
 
-let t = d3.transition().duration(10000);
+let t = d3.transition().duration(1000);
 
+function showHideMenu(x){
+	x.classList.toggle("change");
+	if (menuVisible){
+		menuLeft = parseFloat(window.innerWidth);
+	} else {
+		menuLeft = parseFloat(window.innerWidth) - menuWidth;
+	}
+	d3.select('#objectMenu').transition(t).style('left',menuLeft + 'px');
+
+	menuVisible = !menuVisible;
+}
 function resetInfo(){
 	var cvs = d3.select('#videoDiv').select('canvas');
 	cvs.transition(t)
-		.attr('width',vWidth)
-		.attr('height',vHeight)
+		// .attr('width',vWidth)
+		// .attr('height',vHeight)
 		.style('width',vWidth+'px')
 		.style('height',vHeight+'px');
 
 	var iDiv = d3.select('#infoDiv')
 
 	iDiv.select('#objectName').html('')
+	iDiv.select('#objectDistance').html('')
+	iDiv.select('#objectSize').html('')
+	iDiv.select('#ImageCaption').html('')
+
 }
 function updateInfo(objectName){
 	//shrink the video
 	var cvs = d3.select('#videoDiv').select('canvas');
-	var w = cvs.attr('width');
-	var h = cvs.attr('height');
+	var w = parseFloat(cvs.style('width'));
+	var h = parseFloat(cvs.style('height'));
 	cvs.transition(t)
-		.attr('width',w*shrink)
-		.attr('height',h*shrink)
+		// .attr('width',w*shrink)
+		// .attr('height',h*shrink)
 		.style('width',w*shrink+'px')
 		.style('height',h*shrink+'px')
 	var iDiv = d3.select('#infoDiv')
 
 	iDiv.select('#objectName').html(objectName)
-
+	iDiv.select('#objectDistance').html('Distance: --')
+	iDiv.select('#objectSize').html('Size: --')
+	iDiv.select('#ImageCaption').html('Caption: --')
 
 }
 //set all the sizes
@@ -48,17 +68,16 @@ function preload(){
 
 	var m = 10; //margin
 	var b = 50; //button height
-	var w = parseFloat(window.innerWidth)/2. - 3.*m;
-	var h = parseFloat(window.innerHeight) - 2.*m;
+	var frac = 0.6; //maximum fraction of screen width allowed for video/images
 
 	//size this based on the screen
-	var sze = Math.max(w, h);
-	vWidth = sze;
-	vHeight = vWidth*aspect;
-	if (vHeight > h){
-		vHeight = h;
-		vWidth = vHeight/aspect;
+	vHeight = parseFloat(window.innerHeight) - 3.*m - b;
+	vWidth = vHeight/aspect;
+	if (vWidth > frac*window.innerWidth){ 
+		vWidth = frac*window.innerWidth;
+		vHeight = vWidth*aspect;
 	}
+
 
 	d3.select('#videoDiv')
 		.style('position','absolute')
@@ -67,7 +86,7 @@ function preload(){
 		.style('padding','0')
 		.style('margin','0')
 		.style('width',vWidth + 'px')
-		.style('height',vHeight + 'px')
+		.style('height',vHeight + 'px')		
 	d3.select('#infoDiv')
 		.style('position','absolute')
 		.style('top',m + 'px')
@@ -75,21 +94,29 @@ function preload(){
 		.style('margin',0)
 		.style('padding','0')
 		.style('width',parseFloat(window.innerWidth) - vWidth - 3.*m + 'px')
-		.style('height',vHeight - b - m + 'px')
+		.style('height',vHeight + b + m + 'px')
 
+	d3.select('#objectMenu')
+		.style('position','absolute')
+		.style('top',0)
+		.style('left',menuLeft + 'px')
+		.style('margin',0)
+		.style('padding',0)
+		.style('width',menuWidth - 4 + 'px')//to account for 2px border
+		.style('height',parseFloat(window.innerHeight) - 4 + 'px')//to account for 2px border
 
 	d3.select('#resetButton')
 		.style('position','absolute')
-		.style('top',m + vHeight - b + 'px')
-		.style('left',(vWidth + 2.*m) +'px')
+		.style('top',vHeight + 2.*m + 'px')
+		.style('left',m +'px')
 		.style('margin',0)
 		.style('padding','0')
-		.style('width',parseFloat(window.innerWidth) - vWidth - 3.*m + 'px')
+		.style('width',vWidth + 'px')
 		.style('height',b + 'px')
 
 
 
-	var iWidth = parseFloat(window.innerWidth) - parseFloat(w);
+	var iWidth = parseFloat(window.innerWidth) - parseFloat(vWidth);
 	d3.select('#infoDiv').attr('width', iWidth+"px");
 
 	var cvs = d3.select('#videoDiv').select('canvas');
@@ -98,12 +125,13 @@ function preload(){
 	}
 
 
-
 }
 
 
 function setup(){
 	createCanvas(vWidth, vHeight).parent(select('#videoDiv'));
+	d3.select('#videoDiv').select('canvas').classed('bordered', true);
+
 	video = createCapture(VIDEO);
 	video.hide();
 	background(0);
@@ -132,12 +160,9 @@ function initializeML(numClasses=null){
 
 function draw() {
 	background(0);
-	var cvs = d3.select('#videoDiv').select('canvas');
-	var w = cvs.attr('width');
-	var h = cvs.attr('height');
-	image(video, 0, 0, w, h);
-	fill(255);
-	textSize(16);
+	image(video, 0, 0, vWidth, vHeight);
+	fill('gray');
+	textSize(24);
 	text(label, 10, height - 10);
 
 	if (readyModel && readyVideo && !classifying){
@@ -195,6 +220,9 @@ function gotResults(err, results) {
 window.addEventListener("resize", preload)
 d3.select('#resetButton').on('click',function(e){
 	resetInfo('Eta Carina');
+})
+d3.select('#showMenuButton').on('click',function(e){
+	showHideMenu(this);
 })
 //for testing
 d3.select('#infoDiv').on('click',function(e){
