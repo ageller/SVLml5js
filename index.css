@@ -3,6 +3,7 @@
 	--background-color: #E8E8E8;
 	--button-foreground-color: #000000;
 	--button-background-color: #E8E8E8;
+	--highlight-color: #8B008B;
 }
 
 body {
@@ -14,6 +15,9 @@ body {
 	overflow: hidden;
 }
 
+.scrollable{
+	overflow-y:auto;
+}
 .bordered {
 	border:2px solid black;
 }
@@ -21,6 +25,10 @@ body {
 .title {
 	padding:2px;
 	font-size:40px;
+}
+.subTitle {
+	padding:2px;
+	font-size:30px;
 }
 .caption {
 	padding:2px;

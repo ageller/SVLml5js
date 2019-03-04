@@ -8,6 +8,7 @@ let readyModel = false;
 let classifying = false;
 let aspect = 9./12. //this is the  aspect (y/x) of my webcam 
 let vWidth;
+let iWidth;
 let vHeight;
 let menuWidth = 0.25*parseFloat(window.innerWidth);
 let menuLeft = parseFloat(window.innerWidth);
@@ -16,19 +17,43 @@ let menuVisible = false;
 let shrink = 0.2; //fraction to shrink down the video when showing image
 
 let t = d3.transition().duration(1000);
-
-function showHideMenu(x){
-	x.classList.toggle("change");
-	if (menuVisible){
-		menuLeft = parseFloat(window.innerWidth);
-	} else {
-		menuLeft = parseFloat(window.innerWidth) - menuWidth;
+function populateMenu(data){
+	var menu = d3.select('#objectMenu')
+	for (var key in data) {
+	if (data.hasOwnProperty(key)) {
+		menu.append('div')
+			.attr('class','subTitle')
+			.text(key)
+		data[key].forEach(function(d){
+			menu.append('div')
+				.attr('class','caption')
+				.text(d['Object'])
+				.style('cursor','pointer')
+				.on('click', function(e){
+					updateInfo(d)
+				})
+		})
 	}
+}
+
+}
+function showHideMenu(x){
+	menuVisible = !menuVisible;
+
+	x.classList.toggle("change");
+	var useiWidth = iWidth
+	if (menuVisible){
+		menuLeft = parseFloat(window.innerWidth) - menuWidth;
+		useiWidth -= menuWidth
+	} else {
+		menuLeft = parseFloat(window.innerWidth);
+	}
+	d3.select('#infoDiv').transition(t).style('width',useiWidth + 'px')
 	d3.select('#objectMenu').transition(t).style('left',menuLeft + 'px');
 
-	menuVisible = !menuVisible;
 }
 function resetInfo(){
+	shrink = 0.2;
 	var cvs = d3.select('#videoDiv').select('canvas');
 	cvs.transition(t)
 		// .attr('width',vWidth)
@@ -44,7 +69,7 @@ function resetInfo(){
 	iDiv.select('#ImageCaption').html('')
 
 }
-function updateInfo(objectName){
+function updateInfo(obj){
 	//shrink the video
 	var cvs = d3.select('#videoDiv').select('canvas');
 	var w = parseFloat(cvs.style('width'));
@@ -55,12 +80,22 @@ function updateInfo(objectName){
 		.style('width',w*shrink+'px')
 		.style('height',h*shrink+'px')
 	var iDiv = d3.select('#infoDiv')
-
-	iDiv.select('#objectName').html(objectName)
-	iDiv.select('#objectDistance').html('Distance: --')
-	iDiv.select('#objectSize').html('Size: --')
-	iDiv.select('#ImageCaption').html('Caption: --')
-
+	shrink = 1.
+	
+	var hColor = getComputedStyle(document.documentElement).getPropertyValue('--highlight-color')
+	iDiv.select('#objectName').html(obj['Object'])
+	if (obj['Distance'] != null){
+		iDiv.select('#objectDistance')
+			.html('<span style="color:'+hColor+'"> Distance: </span>'+obj['Distance'])
+	}
+	if (obj['Size'] != null){
+		iDiv.select('#objectSize')
+			.html('<span style="color:'+hColor+'"> Size: </span>'+obj['Size'])
+	}
+	if (obj['Notes'] != null){
+		iDiv.select('#ImageCaption')
+			.html('<span style="color:'+hColor+'"> Notes: </span>'+obj['Notes'])
+	}
 }
 //set all the sizes
 function preload(){
@@ -78,7 +113,6 @@ function preload(){
 		vHeight = vWidth*aspect;
 	}
 
-
 	d3.select('#videoDiv')
 		.style('position','absolute')
 		.style('top',m + 'px')
@@ -87,13 +121,15 @@ function preload(){
 		.style('margin','0')
 		.style('width',vWidth + 'px')
 		.style('height',vHeight + 'px')		
+
+	iWidth = parseFloat(window.innerWidth) - vWidth - 3.*m
 	d3.select('#infoDiv')
 		.style('position','absolute')
 		.style('top',m + 'px')
 		.style('left',(vWidth + 2.*m) +'px')
 		.style('margin',0)
 		.style('padding','0')
-		.style('width',parseFloat(window.innerWidth) - vWidth - 3.*m + 'px')
+		.style('width',iWidth + 'px')
 		.style('height',vHeight + b + m + 'px')
 
 	d3.select('#objectMenu')
@@ -115,9 +151,6 @@ function preload(){
 		.style('height',b + 'px')
 
 
-
-	var iWidth = parseFloat(window.innerWidth) - parseFloat(vWidth);
-	d3.select('#infoDiv').attr('width', iWidth+"px");
 
 	var cvs = d3.select('#videoDiv').select('canvas');
 	if (cvs != null){
@@ -217,15 +250,18 @@ function gotResults(err, results) {
 
 
 ///////////////////////////
+//attach some functions to buttons
 window.addEventListener("resize", preload)
 d3.select('#resetButton').on('click',function(e){
-	resetInfo('Eta Carina');
+	resetInfo();
 })
 d3.select('#showMenuButton').on('click',function(e){
 	showHideMenu(this);
 })
-//for testing
-d3.select('#infoDiv').on('click',function(e){
-	console.log('testing')
-	updateInfo('Eta Carina');
-})
+//read in the data
+d3.json('data/allObjects.json')
+	.then(function(data) {
+		populateMenu(data)
+	});
+
+
