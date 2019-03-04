@@ -13,6 +13,7 @@ body {
 	margin:0;
 	background-color : var(--background-color);
 	overflow: hidden;
+	color: var(--foreground-color);;
 }
 
 .scrollable{
@@ -21,7 +22,9 @@ body {
 .bordered {
 	border:2px solid black;
 }
-
+.hidden {
+	display:none;
+}
 .title {
 	padding:2px;
 	font-size:40px;
@@ -66,7 +69,7 @@ body {
 	cursor: pointer;
 }
 .buttonDiv{
-	padding: 0px;
+	padding: 4px;
 	margin: 0px;
 	text-align: center;
 	border: 2px solid var(--button-foreground-color);
@@ -77,6 +80,15 @@ body {
 }
 .buttonText{
 	font-size:46px;
+}
+.highlighted{
+	color: var(--highlight-color);
+}
+.training{
+	margin: 10px;
+	width: 200px;
+	height: 20px;
+	font-size: 16px;
 }
 .buttonDivUse{
 	color: var(--button-foreground-color);

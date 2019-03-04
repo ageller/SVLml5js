@@ -4,7 +4,7 @@
 # # Read in all json files in a directory and create 1 combined file for app
 # 
 
-# In[28]:
+# In[87]:
 
 
 import pandas as pd
@@ -15,33 +15,37 @@ import os
 
 # ### Read in all the data
 
-# In[29]:
+# In[88]:
 
 
 loc = os.path.join('TileWallData','objectFiles')
 
 
-# In[30]:
+# In[89]:
 
 
 files = os.listdir(loc)
 #print(files)
 
 
-# In[31]:
+# In[103]:
 
 
 objects = []
 categories = []
 for f in files:
-    df = pd.read_json(os.path.join(loc,f),typ='dict')
+    df = pd.read_json(os.path.join(loc,f),typ='dict', encoding = "ISO-8859-1", convert_axes = False)
+# had a problem with pandas wanting to automatically convert M60 to a Timestamp!
+#     if (f == "M60.json"):
+#         print(f)
+#         print(df)
     objects.append(df)
-    categories.append(df['Category'])
+    categories.append(df[0]['Category'])
 
 
 # ### Identify the unique categories, and create the new dataframe
 
-# In[32]:
+# In[104]:
 
 
 categories = list(set(categories))
@@ -51,17 +55,17 @@ for c in categories:
     dictOut[c] = []
 
 
-# In[33]:
+# In[105]:
 
 
 for o in objects:
-    dictOut[o['Category']].append(dict(o))
+    dictOut[o[0]['Category']].append(dict(o))
 #print(dictOut)
 
 
 # ### Dump this to json
 
-# In[34]:
+# In[106]:
 
 
 with open('allObjects.json', 'w') as fp:
@@ -72,7 +76,7 @@ with open('allObjects.json', 'w') as fp:
 # 
 # ```jupyter nbconvert --to script [YOUR_NOTEBOOK].ipynb```
 
-# In[35]:
+# In[8]:
 
 
 get_ipython().system('jupyter nbconvert --to script compileObjects.ipynb')

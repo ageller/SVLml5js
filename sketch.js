@@ -1,3 +1,4 @@
+let objData = null;
 let classifier = null;
 let featureExtractor = null;
 let video;
@@ -5,38 +6,66 @@ let label = 'loading model';
 let canvas;
 let readyVideo = false;
 let readyModel = false;
-let classifying = false;
+let doClassify = true;
 let aspect = 9./12. //this is the  aspect (y/x) of my webcam 
 let vWidth;
 let iWidth;
 let vHeight;
-let menuWidth = 0.25*parseFloat(window.innerWidth);
-let menuLeft = parseFloat(window.innerWidth);
+let menuWidth;
+let menuLeft;
 let menuVisible = false;
-
+let loss;
 let shrink = 0.2; //fraction to shrink down the video when showing image
+let numObjects = 2;
+let trainingDelay = 100;
+let tTrans = d3.transition().duration(1000);
+let allResults = [];
+let nResultsTest = 100;
 
-let t = d3.transition().duration(1000);
 function populateMenu(data){
 	var menu = d3.select('#objectMenu')
 	for (var key in data) {
-	if (data.hasOwnProperty(key)) {
 		menu.append('div')
 			.attr('class','subTitle')
 			.text(key)
+		//for (var id in data[key]){
+		//	var d = data[key][id]
+		//	console.log(key, id, d)
 		data[key].forEach(function(d){
+			numObjects += 1;
 			menu.append('div')
 				.attr('class','caption')
-				.text(d['Object'])
+				.text(Object.keys(d)[0])
 				.style('cursor','pointer')
 				.on('click', function(e){
-					updateInfo(d)
+					if (d3.select('#trainingDiv').classed('hidden')){
+						doClassify = false;
+						updateInfo(d);
+					}
+					updateTraining(d);
 				})
 		})
 	}
-}
+
+	//training button
+	menu.append('div')
+		.attr('class','buttonDiv buttonDivUse')
+		.attr('id','trainingButton')
+		.style('width',menuWidth-40 + 'px')
+		.style('margin','10px')
+		.style('padding','2px')
+		.style('height','20px')
+		.style('font-size','16px')
+		.text('Update Model Training')
+		.on('click', function(e){
+			resetInfo();
+			d3.select('#infoDiv').classed('hidden',true)
+			d3.select('#trainingDiv').classed('hidden',false)
+			doClassify = false;
+		})
 
 }
+
 function showHideMenu(x){
 	menuVisible = !menuVisible;
 
@@ -48,14 +77,16 @@ function showHideMenu(x){
 	} else {
 		menuLeft = parseFloat(window.innerWidth);
 	}
-	d3.select('#infoDiv').transition(t).style('width',useiWidth + 'px')
-	d3.select('#objectMenu').transition(t).style('left',menuLeft + 'px');
+	d3.select('#infoDiv').transition(tTrans).style('width',useiWidth + 'px')
+	d3.select('#trainingDiv').transition(tTrans).style('width',useiWidth + 'px')
+	d3.select('#objectMenu').transition(tTrans).style('left',menuLeft + 'px');
 
 }
+
 function resetInfo(){
 	shrink = 0.2;
 	var cvs = d3.select('#videoDiv').select('canvas');
-	cvs.transition(t)
+	cvs.transition(tTrans)
 		// .attr('width',vWidth)
 		// .attr('height',vHeight)
 		.style('width',vWidth+'px')
@@ -68,36 +99,258 @@ function resetInfo(){
 	iDiv.select('#objectSize').html('')
 	iDiv.select('#ImageCaption').html('')
 
+	doClassify = true;
+	allResults = [];
+
 }
+
+
 function updateInfo(obj){
 	//shrink the video
 	var cvs = d3.select('#videoDiv').select('canvas');
 	var w = parseFloat(cvs.style('width'));
 	var h = parseFloat(cvs.style('height'));
-	cvs.transition(t)
+	cvs.transition(tTrans)
 		// .attr('width',w*shrink)
 		// .attr('height',h*shrink)
 		.style('width',w*shrink+'px')
 		.style('height',h*shrink+'px')
 	var iDiv = d3.select('#infoDiv')
 	shrink = 1.
-	
-	var hColor = getComputedStyle(document.documentElement).getPropertyValue('--highlight-color')
-	iDiv.select('#objectName').html(obj['Object'])
-	if (obj['Distance'] != null){
+
+	id = Object.keys(obj)[0]
+	iDiv.select('#objectName').html(id)
+	if (obj[id]['Distance'] != null){
 		iDiv.select('#objectDistance')
-			.html('<span style="color:'+hColor+'"> Distance: </span>'+obj['Distance'])
+			.html('<span class="highlighted"> Distance: </span>'+obj[id]['Distance'])
 	}
-	if (obj['Size'] != null){
+	if (obj[id]['Size'] != null){
 		iDiv.select('#objectSize')
-			.html('<span style="color:'+hColor+'"> Size: </span>'+obj['Size'])
+			.html('<span class="highlighted"> Size: </span>'+obj[id]['Size'])
 	}
-	if (obj['Notes'] != null){
+	if (obj[id]['Notes'] != null){
 		iDiv.select('#ImageCaption')
-			.html('<span style="color:'+hColor+'"> Notes: </span>'+obj['Notes'])
+			.html('<span class="highlighted"> Notes: </span>'+obj[id]['Notes'])
+	}
+
+}
+
+
+function initializeML(numClasses=null){
+	// Extract the already learned features from MobileNet (eventually we want to only use our own training set)
+	if (featureExtractor == null){
+		featureExtractor = ml5.featureExtractor('MobileNet', modelReady);
+	} else {
+		numClasses += featureExtractor.numClasses;
+	}
+	if (numClasses != null){
+		featureExtractor.numClasses = numClasses;
+	}
+	// Initialize the Image Classifier method with MobileNet and the video as the second argument
+	classifier = featureExtractor.classification(video, videoReady);
+	//classifier = featureExtractor.regression(video, videoReady);
+	//classifier = ml5.imageClassifier('MobileNet', video, videoReady);  
+
+
+}
+
+function modelReady(){
+	console.log('Base Model (MobileNet) Loaded!');
+	d3.select('#trainingNumber').text(classifier.mapStringToIndex.length).classed('highlighted', true);
+	label = '';
+	readyModel = true;
+}
+
+
+function videoReady() {
+	console.log('Video ready');
+	readyVideo = true;
+}
+
+function loadSavedModel(){
+	classifier.load('./model/model.json', function() {
+		console.log('Custom Model Loaded!');
+	});
+	console.log(classifier)
+	console.log(classifier.numClasses);
+
+}
+// Get a prediction for the current video frame
+function classify() {
+	classifier.classify(function(err, results){
+		gotResults(err, results)
+	}); 
+	//classifier.predict(gotResults)
+}
+
+
+// Show the results
+function gotResults(err, results) {
+
+	//need something in here to check if the result is finalized
+	//then I will update the infoDiv
+
+	// Display any error
+	if (err) {
+		console.error(err);
+	}
+	if (results) {
+		label = results;
+		allResults.push(results)
+		console.log(allResults.length)
+		if (allResults.length >= nResultsTest){
+			if (doClassify){
+				checkResult();
+				doClassify = false;
+			}
+		}
+		//updateInfo(objData[results])
+  }
+}
+function checkResult(){
+	console.log("in checkResult")
+	console.log(allResults)
+
+	//something better here!
+	result = allResults[0]
+
+	//identify the object based on the name
+	for (var key in objData) {
+		objData[key].forEach(function(d,i){
+			if (Object.keys(d)[0] == result){
+				console.log(result, Object.keys(d)[0], objData[key][i], d)
+				doClassify = false;
+				updateInfo(d);
+			}
+		})
+	}
+
+}
+
+///////////////////////////
+// for training
+///////////////////////////
+function populateTrainingDiv(){
+
+	d = d3.select('#trainingDiv')
+
+	d.append('div')
+		.attr('class','buttonDiv buttonDivUse training')
+		.text('Load New Blank Model')
+		.on('click', function(e){
+			featureExtractor = null;
+			classifier = null;
+			doClassify = false;
+			initializeML(numClasses = numObjects);
+		})
+
+	d.append('div')
+		.attr('class','buttonDiv buttonDivUse training')
+		.text('Reload Saved Model')
+		.on('click', function(e){
+			loadSavedModel();
+		})
+
+	d.append('div')
+		.attr('class','training')
+		.style('margin-top','30px')
+		.style('width',iWidth - 10 + 'px')
+		.text("Training Status : ")
+		.append('span')
+			.attr('id','trainingStatus')
+			.classed('highlighted', false)
+			.text('--')
+
+	d.append('div')
+		.attr('class','training')
+		.style('width',iWidth - 10 + 'px')
+		.text("Number of objects in training set : ")
+		.append('span')
+			.attr('id','trainingNumber')
+			.classed('highlighted', false)
+			.text('--')
+
+
+	d.append('div')
+		.attr('class','training')
+		.style('width',iWidth - 10 + 'px')
+		.text("Training model on : ")
+		.append('span')
+			.attr('id','trainingObject')
+			.classed('highlighted', false)
+			.text('[select from menu on right]')
+
+	d.append('div')
+		.attr('id','addObject')
+		.attr('class','buttonDiv buttonDivUse training')
+		.text('Record')
+
+	d.append('div')
+		.attr('class','buttonDiv buttonDivUse training')
+		.style('margin-top','30px')
+		.text('Train Model')
+		.on('click', function(e){
+			classifier.train(whileTraining);
+		})
+
+	d.append('div')
+		.attr('class','buttonDiv buttonDivUse training')
+		.text('Save Model')
+		.on('click', function(e){
+			classifier.save();
+		})
+
+	d.append('div')
+		.attr('class','buttonDiv buttonDivUse training')
+		.style('margin-top','30px')
+		.text('Done')
+		.on('click', function(e){
+			doClassify = true;
+			d3.select('#infoDiv').classed('hidden',false)
+			d3.select('#trainingDiv').classed('hidden',true)
+		})
+
+
+}
+function updateTraining(obj){
+	id = Object.keys(obj)[0]
+	d3.select('#trainingObject').text(id).classed('highlighted', true);
+	d3.select('#trainingNumber').text(classifier.mapStringToIndex.length).classed('highlighted', true);
+
+	var mouseUp = true;
+	var record;
+	d3.select('#addObject')
+		.on('mousedown', function(e){
+			mouseUp = false;
+			record = setInterval(function(){ 
+				console.log(id)
+				classifier.addImage(id);
+				if (mouseUp){
+					d3.select('#trainingNumber').text(classifier.mapStringToIndex.length);
+					clearInterval(record);
+				}
+			}, trainingDelay);
+		})
+		.on('mouseup', function(e){
+			mouseUp = true;
+		})
+}
+
+function whileTraining(lossValue) {
+	d3.select('#trainingStatus').classed('highlighted',true);
+	if (lossValue) {
+		loss = lossValue;
+		d3.select('#trainingStatus').text('Loss: ' + loss);
+	} else {
+		d3.select('#trainingStatus').text('Done Training! Final Loss: ' + loss);
 	}
 }
-//set all the sizes
+
+///////////////////////////
+// p5 required functions
+///////////////////////////
+
+// set all the sizes
 function preload(){
 	console.log('resizing...')
 
@@ -132,6 +385,8 @@ function preload(){
 		.style('width',iWidth + 'px')
 		.style('height',vHeight + b + m + 'px')
 
+	menuWidth = 0.25*parseFloat(window.innerWidth);
+	menuLeft = parseFloat(window.innerWidth);
 	d3.select('#objectMenu')
 		.style('position','absolute')
 		.style('top',0)
@@ -150,16 +405,23 @@ function preload(){
 		.style('width',vWidth + 'px')
 		.style('height',b + 'px')
 
-
+	d3.select('#trainingDiv')
+		.style('position','absolute')
+		.style('top',m + 'px')
+		.style('left',(vWidth + 2.*m) +'px')
+		.style('margin',0)
+		.style('padding','0')
+		.style('width',iWidth + 'px')
+		.style('height',vHeight + b + m + 'px')
+		.classed('hidden',true)
 
 	var cvs = d3.select('#videoDiv').select('canvas');
 	if (cvs != null){
 		resizeCanvas(vWidth, vHeight);
 	}
 
-
+	populateTrainingDiv()
 }
-
 
 function setup(){
 	createCanvas(vWidth, vHeight).parent(select('#videoDiv'));
@@ -171,24 +433,6 @@ function setup(){
 
 	initializeML();
 	loadSavedModel();
-
-
-}
-
-function initializeML(numClasses=null){
-	// Extract the already learned features from MobileNet (eventually we want to only use our own training set)
-	if (featureExtractor == null){
-		featureExtractor = ml5.featureExtractor('MobileNet', modelReady);
-	} else {
-		numClasses += featureExtractor.numClasses;
-	}
-	if (numClasses != null){
-		featureExtractor.numClasses = numClasses;
-	}
-	// Initialize the Image Classifier method with MobileNet and the video as the second argument
-	classifier = featureExtractor.classification(video, videoReady);
-	//classifier = featureExtractor.regression(video, videoReady);
-	//classifier = ml5.imageClassifier('MobileNet', video, videoReady);  
 }
 
 function draw() {
@@ -196,61 +440,17 @@ function draw() {
 	image(video, 0, 0, vWidth, vHeight);
 	fill('gray');
 	textSize(24);
-	text(label, 10, height - 10);
+		text(label, 10, height - 10);
 
-	if (readyModel && readyVideo && !classifying){
+	if (readyModel && readyVideo && doClassify){
 		classify();
-	}
+	} 
 }
-
-
-
-function modelReady(){
-	console.log('Base Model (MobileNet) Loaded!');
-	readyModel = true;
-}
-
-
-function videoReady() {
-	console.log('Video ready');
-	readyVideo = true;
-}
-
-function loadSavedModel(){
-	classifier.load('./model/model.json', function() {
-		console.log('Custom Model Loaded!');
-	});
-	console.log(classifier)
-	console.log(classifier.numClasses);
-
-}
-// Get a prediction for the current video frame
-function classify() {
-	classifier.classify(gotResults); 
-	//classifier.predict(gotResults)
-}
-
-// Show the results
-function gotResults(err, results) {
-
-	//need something in here to check if the result is finalized
-	//then I will update the infoDiv
-
-	// Display any error
-	if (results == "casA"){
-		console.log("checking", results, err)
-	}
-	if (err) {
-		console.error(err);
-	}
-	if (results && results[0]) {
-		label = results;
-  }
-}
-
 
 ///////////////////////////
-//attach some functions to buttons
+// runs on load
+///////////////////////////
+// attach some functions to buttons
 window.addEventListener("resize", preload)
 d3.select('#resetButton').on('click',function(e){
 	resetInfo();
@@ -261,6 +461,8 @@ d3.select('#showMenuButton').on('click',function(e){
 //read in the data
 d3.json('data/allObjects.json')
 	.then(function(data) {
+		objData = data;
+		console.log(objData)
 		populateMenu(data)
 	});
 
