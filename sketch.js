@@ -97,15 +97,14 @@ function showHideMenu(x){
 
 function resetInfo(){
 	shrink = 0.2;
-	var cvs = d3.select('#videoDiv').select('canvas');
-	cvs.transition(tTrans)
-		// .attr('width',vWidth)
-		// .attr('height',vHeight)
+	d3.select('canvas').transition(tTrans)
+		.style('width',vWidth+'px')
+		.style('height',vHeight+'px');
+	d3.select('#videoDiv').transition(tTrans)
 		.style('width',vWidth+'px')
 		.style('height',vHeight+'px');
 
 	var iDiv = d3.select('#infoDiv')
-
 	iDiv.select('#objectName').html('')
 	iDiv.select('#objectDistance').html('')
 	iDiv.select('#objectSize').html('')
@@ -123,14 +122,16 @@ function resetInfo(){
 
 function updateInfo(obj){
 	//shrink the video
-	var cvs = d3.select('#videoDiv').select('canvas');
+	var cvs = d3.select('canvas');
 	var w = parseFloat(cvs.style('width'));
 	var h = parseFloat(cvs.style('height'));
 	cvs.transition(tTrans)
-		// .attr('width',w*shrink)
-		// .attr('height',h*shrink)
 		.style('width',w*shrink+'px')
 		.style('height',h*shrink+'px')
+	d3.select('#videoDiv').transition(tTrans)
+		.style('width',w*shrink+'px')
+		.style('height',h*shrink+'px')
+
 	var iDiv = d3.select('#infoDiv')
 	shrink = 1.
 
@@ -164,11 +165,11 @@ function updateInfo(obj){
 		}
 	}
 	d3.select('#imageDiv').selectAll('img').remove()
-	d3.select('#videoDiv').selectAll('div').classed("hidden",true)
+	d3.select('#imageDiv').selectAll('div').classed("hidden",true)
 	if (obj[id].hasOwnProperty('images')){
 		if (obj[id]['images'] != null){
 			showImage(obj[id]['images'], imgI);
-			d3.select('#videoDiv').selectAll('div').classed("hidden",false)
+			d3.select('#imageDiv').selectAll('div').classed("hidden",false)
 			d3.select('#forwardImage').on('click', function(){
 				showImage(obj[id]['images'], imgI+1)
 			})
@@ -205,17 +206,33 @@ function showImage(images, i){
 		i = images.length-1;
 	}
 	d3.select('#imageDiv').selectAll('img').remove()
+	d3.select('#imageDiv').selectAll('a').remove()
 	imgI = i % images.length;
 	// console.log(i, imgI, images.length, images[imgI])
 
 	img = images[imgI]
-	var w = parseFloat(d3.select('#videoDiv').style('width'));
-	var h = parseFloat(d3.select('#videoDiv').style('height'));
-	var img = d3.select('#imageDiv').append('img')
-		.attr('src',img) 
-		.attr('width',w + 'px')
-		.style('position','absolute')
-		.style('clip', 'rect(0px,'+w+'px,'+h+'px,0px)'); 
+	var w = parseFloat(d3.select('#imageDiv').style('width'));
+	var h = parseFloat(d3.select('#imageDiv').style('height'));
+
+	d3.select('#imageDiv').append('a')
+		.attr('href',img)
+		.attr('target','_blank')
+		.append('img')
+			.attr('src',img) 
+			.attr('width',w + 'px')
+			.style('position','absolute')
+			.style('clip', 'rect(0px,'+w+'px,'+h+'px,0px)')
+			.style('z-index',0)
+			.on('load', function(){
+				var i = d3.select('#imageDiv').select('img');
+				var h2 = parseFloat(i.style('height'))
+				if (h > h2){
+					i.style('margin-top',(h-h2)/2. + 'px')
+				}
+
+			})
+	
+
 
 
 }
@@ -466,6 +483,7 @@ function preload(){
 		.style('margin',0)
 		.style('width',vWidth + 'px')
 		.style('height',vHeight + 'px')	
+		.style('z-index',4)
 
 	d3.select('#imageDiv')
 		.style('position','absolute')
@@ -475,7 +493,8 @@ function preload(){
 		.style('margin',0)
 		.style('width',vWidth + 'px')
 		.style('height',vHeight + 'px')	
-		.style('z-index',-1)
+		.style('background-color','black')
+		// .style('z-index',-1)
 
 	iWidth = parseFloat(window.innerWidth) - vWidth - 3.*m
 	d3.select('#infoDiv')
@@ -517,13 +536,13 @@ function preload(){
 		.style('height',vHeight + b + m + 'px')
 		.classed('hidden',true)
 
-	var cvs = d3.select('#videoDiv').select('canvas');
+	var cvs = d3.select('canvas');
 	if (cvs != null){
 		resizeCanvas(vWidth, vHeight);
 	}
 
 	//buttons to look through images
-	d3.select('#videoDiv').append('div')
+	d3.select('#imageDiv').append('div')
 		.attr('id','forwardImage')
 		.attr('class','buttonDivInverse')
 		.style('position','absolute')
@@ -531,10 +550,11 @@ function preload(){
 		.style('right','15px')
 		.style('font-size', '60px')
 		.style('background-color','None')
+		.style('z-index',1)
 		.text('>')
 		.classed('hidden',true)
 
-	d3.select('#videoDiv').append('div')
+	d3.select('#imageDiv').append('div')
 		.attr('id','backwardImage')
 		.attr('class','buttonDivInverse')
 		.style('position','absolute')
@@ -542,6 +562,7 @@ function preload(){
 		.style('left','15px')
 		.style('font-size', '60px')
 		.style('background-color','None')
+		.style('z-index',1)
 		.text('<')	
 		.classed('hidden',true)
 
@@ -550,7 +571,7 @@ function preload(){
 
 function setup(){
 	createCanvas(vWidth, vHeight).parent(select('#videoDiv'));
-	d3.select('#videoDiv').select('canvas').classed('bordered', true);
+	d3.select('canvas').classed('bordered', true);
 
 	video = createCapture(VIDEO);
 	video.hide();
