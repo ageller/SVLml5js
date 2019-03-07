@@ -1,4 +1,4 @@
-Object,Link,Distance,Size,Notes
+Object,WWTurl,Distance,Size,Notes
 Carina Nebula,"http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto=-59.867777777778,10.752361111111,5,0,0",~6.5-10 kly,,"The Carina Nebula (a.k.a., Eta Carinae Nebula) is a large bright nebula that surrounds several open clusters of stars. It is ~4x larger than the Orion Nebula."
 Cat's Eye Nebula,"http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto=66.6333664293174,17.9758851185194,0.159779070363401,0,0",3.3 kly,,"The Cat's Eye is a planetary nebula. It is the result of star that died by losing its outermost layers about 1,000 years ago."
 Crab Nebula(M1),"http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto=22.016667,5.575,1,0,0",6.5 kly,,The Crab Nebula is a Supernova remnant. The Supernova that produced the Crab Nebula was observed by astronomers across the world in 1054. It is expanding at 1500 km/s.

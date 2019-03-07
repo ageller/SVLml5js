@@ -4,7 +4,7 @@
 # # Read in all json files in a directory and create 1 combined file for app
 # 
 
-# In[87]:
+# In[167]:
 
 
 import pandas as pd
@@ -15,23 +15,23 @@ import os
 
 # ### Read in all the data
 
-# In[88]:
+# In[168]:
 
 
 loc = os.path.join('TileWallData','objectFiles')
 
 
-# In[89]:
+# In[169]:
 
 
 files = os.listdir(loc)
 #print(files)
 
 
-# In[103]:
+# In[170]:
 
 
-objects = []
+objects = {}
 categories = []
 for f in files:
     df = pd.read_json(os.path.join(loc,f),typ='dict', encoding = "ISO-8859-1", convert_axes = False)
@@ -39,13 +39,13 @@ for f in files:
 #     if (f == "M60.json"):
 #         print(f)
 #         print(df)
-    objects.append(df)
+    objects.update(df)
     categories.append(df[0]['Category'])
 
 
 # ### Identify the unique categories, and create the new dataframe
 
-# In[104]:
+# In[171]:
 
 
 categories = list(set(categories))
@@ -55,17 +55,17 @@ for c in categories:
     dictOut[c] = []
 
 
-# In[105]:
+# In[172]:
 
 
-for o in objects:
-    dictOut[o[0]['Category']].append(dict(o))
+for key, o in objects.items():
+    dictOut[o['Category']].append({key:o})
 #print(dictOut)
 
 
 # ### Dump this to json
 
-# In[106]:
+# In[173]:
 
 
 with open('allObjects.json', 'w') as fp:
@@ -76,7 +76,7 @@ with open('allObjects.json', 'w') as fp:
 # 
 # ```jupyter nbconvert --to script [YOUR_NOTEBOOK].ipynb```
 
-# In[8]:
+# In[114]:
 
 
 get_ipython().system('jupyter nbconvert --to script compileObjects.ipynb')

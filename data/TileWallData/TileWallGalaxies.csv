@@ -1,4 +1,4 @@
-Object,Link,Distance,Size,Notes
+Object,WWTurl,Distance,Size,Notes
 Andromeda(M31),"http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto=41.269444444444,0.71566666666667,12,0,0",2.5Mly (778 kpc),"220,000 light-years (67,000 pc)across","The nearest spiral galaxy to the Milky Way, the two are expected to collide in about 4.5 billion years."
 Antennae Galaxies,"http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto=-18.8808333333333,12.0313888888889,0.328437261281337,4.91659250286803,0",45 Mly,,The Antennae Galaxies (a.k.a. NGC 4038/NGC 4039 or Caldwell 60/61) are two galaxies that are currently colliding and will eventually become one object. The collision is compressing gas resulting in a phase of heavy star formation known as starburst.
 Black Eye Galaxy(M64),"http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto=21.6844444444444,12.9452777777778,0.21962449754760,-1.9006635554218,0",24 Mly,,This is a spiral galaxy with thick dust that blocks out starlight. It is strange because the dust orbits in the opposite direction of the stars.

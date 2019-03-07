@@ -1,4 +1,4 @@
-Object,Link,Distance,Size,Notes
+Object,WWTurl,Distance,Size,Notes
 M2,"http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto=-0.816666667,21.5583333333333,1.4,0,0",33 kly,175 ly,"One of the largest globular clusters known. Under dark skies, it is visible to the Naked Eye. It has 150,000 stars and 21 are known to be variable."
 M3,"http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto=28.3833,13.7033333,1.4,0,0",33.9 kly,180 ly,This is a rather metal rich globular cluster.
 M4,"http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto=-26.53333,16.3933333,1.4,0,0",7.2 kly,70 ly,"This was one of the first globular clusters to be resolved into individual stars. It also houses one of the oldest known stars, which is a white dwarf."

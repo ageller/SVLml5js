@@ -119,22 +119,42 @@ function updateInfo(obj){
 	shrink = 1.
 
 	id = Object.keys(obj)[0]
-	iDiv.select('#objectName').html(id)
-	if (obj[id]['Distance'] != null){
-		iDiv.select('#objectDistance')
-			.html('<span class="highlighted"> Distance: </span>'+obj[id]['Distance'])
+	if (obj.hasOwnProperty(id)){
+		if (obj[id] != null){
+			iDiv.select('#objectName').html(id)
+		}
 	}
-	if (obj[id]['Size'] != null){
-		iDiv.select('#objectSize')
-			.html('<span class="highlighted"> Size: </span>'+obj[id]['Size'])
+	if (obj[id].hasOwnProperty('Distance')){
+		if (obj[id]['Distance'] != null){
+			iDiv.select('#objectDistance')
+				.html('<span class="highlighted"> Distance: </span>'+obj[id]['Distance'])
+		}
 	}
-	if (obj[id]['Notes'] != null){
-		iDiv.select('#ImageCaption')
-			.html('<span class="highlighted"> Notes: </span>'+obj[id]['Notes'])
+	if (obj[id].hasOwnProperty('Size')){
+		if (obj[id]['Size'] != null){
+			iDiv.select('#objectSize')
+				.html('<span class="highlighted"> Size: </span>'+obj[id]['Size'])
+		}
+	}
+	if (obj[id].hasOwnProperty('Notes')){
+		if (obj[id]['Notes'] != null){
+			iDiv.select('#ImageCaption')
+				.html('<span class="highlighted"> Notes: </span>'+obj[id]['Notes'])
+		}
+	}
+	if (obj[id].hasOwnProperty('WWTurl')){
+		if (obj[id]['WWTurl'] != null){
+			flyWWT(obj[id]['WWTurl'])
+		}
 	}
 
 }
-
+function flyWWT(url){
+	var popup = window.open(url,"WWT", "width=200,height=100");
+	setTimeout(function() {popup.close();}, 1000); //I want to make this fire onload, but it won't let me
+	//popup.blur(); //doesn't work
+	//window.focus();
+}
 
 function initializeML(numClasses=null){
 	// Extract the already learned features from MobileNet (eventually we want to only use our own training set)
@@ -212,7 +232,7 @@ function checkResult(){
 	console.log(allResults)
 
 	//something better here!
-	result = allResults[0]
+	result = allResults[allResults.length - 1]
 
 	//identify the object based on the name
 	for (var key in objData) {
@@ -361,8 +381,8 @@ function preload(){
 	//size this based on the screen
 	vHeight = parseFloat(window.innerHeight) - 3.*m - b;
 	vWidth = vHeight/aspect;
-	if (vWidth > frac*window.innerWidth){ 
-		vWidth = frac*window.innerWidth;
+	if (vWidth > frac*parseFloat(window.innerWidth)){ 
+		vWidth = frac*parseFloat(window.innerWidth);
 		vHeight = vWidth*aspect;
 	}
 
@@ -370,8 +390,8 @@ function preload(){
 		.style('position','absolute')
 		.style('top',m + 'px')
 		.style('left',m +'px')
-		.style('padding','0')
-		.style('margin','0')
+		.style('padding',0)
+		.style('margin',0)
 		.style('width',vWidth + 'px')
 		.style('height',vHeight + 'px')		
 
@@ -381,7 +401,7 @@ function preload(){
 		.style('top',m + 'px')
 		.style('left',(vWidth + 2.*m) +'px')
 		.style('margin',0)
-		.style('padding','0')
+		.style('padding',0)
 		.style('width',iWidth + 'px')
 		.style('height',vHeight + b + m + 'px')
 
@@ -401,7 +421,7 @@ function preload(){
 		.style('top',vHeight + 2.*m + 'px')
 		.style('left',m +'px')
 		.style('margin',0)
-		.style('padding','0')
+		.style('padding',0)
 		.style('width',vWidth + 'px')
 		.style('height',b + 'px')
 
@@ -410,7 +430,7 @@ function preload(){
 		.style('top',m + 'px')
 		.style('left',(vWidth + 2.*m) +'px')
 		.style('margin',0)
-		.style('padding','0')
+		.style('padding',0)
 		.style('width',iWidth + 'px')
 		.style('height',vHeight + b + m + 'px')
 		.classed('hidden',true)

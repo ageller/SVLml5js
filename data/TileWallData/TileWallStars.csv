@@ -1,4 +1,4 @@
-Object,Link,Distance,Size,Notes
+Object,WWTurl,Distance,Size,Notes
 Alpha Centauri,"http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto=-60.833974444444,14.660137527778,6.7,0,0",4.37 ly (1.34 pc),1.23 solar radii (A) & 0.87 solar radii (B),"Alpha Centauri is the closest star system to the Solar System. It consists of three stars: the pair Alpha Centauri A and Alpha Centauri B and a small and faint red dwarf, Proxima Centauri, that may be gravitationally bound to the other two."
 Betelgeuse,"http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto=7.4070627777778,5.91952925,4.86901048131776,0,0",643 ly,~5 AU,This is a red supergiant in the constellation Orion. It is one of the largest known stars.
 Canopus,"http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto=-52.695660555556,6.3991971944444,7,0,0",310 ly,,"This is the second brightest star in the night sky and is in the constellation Carina. It can be seen from the Southern Hemisphere. Also, based on it's distance and apparent magnitude, it is one of the most luminous stars in the Galaxy."
