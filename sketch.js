@@ -21,6 +21,7 @@ let trainingDelay = 100;
 let tTrans = d3.transition().duration(1000);
 let allResults = [];
 let nResultsTest = 100;
+let imgI = 0;
 
 function populateMenu(data){
 	var menu = d3.select('#objectMenu')
@@ -60,7 +61,7 @@ function populateMenu(data){
 
 	//training button
 	menu.append('div')
-		.attr('class','buttonDiv buttonDivUse')
+		.attr('class','buttonDiv')
 		.attr('id','trainingButton')
 		.style('width',menuWidth-40 + 'px')
 		.style('margin','10px')
@@ -159,20 +160,21 @@ function updateInfo(obj){
 	}
 	if (obj[id].hasOwnProperty('WWTurl')){
 		if (obj[id]['WWTurl'] != null){
-			flyWWT(obj[id]['WWTurl'])
+			//flyWWT(obj[id]['WWTurl'])
 		}
 	}
 	d3.select('#imageDiv').selectAll('img').remove()
+	d3.select('#videoDiv').selectAll('div').classed("hidden",true)
 	if (obj[id].hasOwnProperty('images')){
 		if (obj[id]['images'] != null){
-			//in future we can show all images
-			var w = parseFloat(d3.select('#videoDiv').style('width'));
-			var h = parseFloat(d3.select('#videoDiv').style('height'));
-			var img = d3.select('#imageDiv').append('img')
-				.attr('src',obj[id]['images'][0]) 
-				.attr('width',w + 'px')
-				.style('position','absolute')
-				.style('clip', 'rect(0px,'+w+'px,'+h+'px,0px)'); 
+			showImage(obj[id]['images'], imgI);
+			d3.select('#videoDiv').selectAll('div').classed("hidden",false)
+			d3.select('#forwardImage').on('click', function(){
+				showImage(obj[id]['images'], imgI+1)
+			})
+			d3.select('#backwardImage').on('click', function(){
+				showImage(obj[id]['images'], imgI-1)
+			})
 		}
 	}
 	d3.select('#wikipedia').selectAll('span').remove()
@@ -198,6 +200,21 @@ function flyWWT(url){
 	//window.focus();
 }
 
+function showImage(images, i){
+	d3.select('#imageDiv').selectAll('img').remove()
+	imgI = i % images.length;
+
+	img = images[imgI]
+	var w = parseFloat(d3.select('#videoDiv').style('width'));
+	var h = parseFloat(d3.select('#videoDiv').style('height'));
+	var img = d3.select('#imageDiv').append('img')
+		.attr('src',img) 
+		.attr('width',w + 'px')
+		.style('position','absolute')
+		.style('clip', 'rect(0px,'+w+'px,'+h+'px,0px)'); 
+
+
+}
 function initializeML(numClasses=null){
 	// Extract the already learned features from MobileNet (eventually we want to only use our own training set)
 	if (featureExtractor == null){
@@ -306,7 +323,7 @@ function populateTrainingDiv(){
 	d = d3.select('#trainingDiv')
 
 	d.append('div')
-		.attr('class','buttonDiv buttonDivUse training')
+		.attr('class','buttonDiv training')
 		.text('Load New Empty Model')
 		.on('click', function(e){
 			featureExtractor = null;
@@ -316,7 +333,7 @@ function populateTrainingDiv(){
 		})
 
 	d.append('div')
-		.attr('class','buttonDiv buttonDivUse training')
+		.attr('class','buttonDiv training')
 		.text('Reload Saved Model')
 		.on('click', function(e){
 			loadSavedModel();
@@ -353,11 +370,11 @@ function populateTrainingDiv(){
 
 	d.append('div')
 		.attr('id','addObject')
-		.attr('class','buttonDiv buttonDivUse training')
+		.attr('class','buttonDiv training')
 		.text('Record')
 
 	d.append('div')
-		.attr('class','buttonDiv buttonDivUse training')
+		.attr('class','buttonDiv training')
 		.style('margin-top','30px')
 		.text('Train Model')
 		.on('click', function(e){
@@ -365,14 +382,14 @@ function populateTrainingDiv(){
 		})
 
 	d.append('div')
-		.attr('class','buttonDiv buttonDivUse training')
+		.attr('class','buttonDiv training')
 		.text('Save Model')
 		.on('click', function(e){
 			classifier.save();
 		})
 
 	d.append('div')
-		.attr('class','buttonDiv buttonDivUse training')
+		.attr('class','buttonDiv training')
 		.style('margin-top','30px')
 		.text('Done')
 		.on('click', function(e){
@@ -500,6 +517,29 @@ function preload(){
 	if (cvs != null){
 		resizeCanvas(vWidth, vHeight);
 	}
+
+	//buttons to look through images
+	d3.select('#videoDiv').append('div')
+		.attr('id','forwardImage')
+		.attr('class','buttonDivInverse')
+		.style('position','absolute')
+		.style('top',vHeight/2 - 30 + 'px')
+		.style('right','15px')
+		.style('font-size', '60px')
+		.style('background-color','None')
+		.text('>')
+		.classed('hidden',true)
+
+	d3.select('#videoDiv').append('div')
+		.attr('id','backwardImage')
+		.attr('class','buttonDivInverse')
+		.style('position','absolute')
+		.style('top',vHeight/2 - 30 + 'px')
+		.style('left','15px')
+		.style('font-size', '60px')
+		.style('background-color','None')
+		.text('<')	
+		.classed('hidden',true)
 
 	populateTrainingDiv()
 }

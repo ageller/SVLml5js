@@ -77,39 +77,47 @@ body {
 	opacity: 1.0;
 	display:block;
 	font-size:42px;
-}
-.buttonText{
-	font-size:42px;
-}
-.buttonDivUse{
 	color: var(--button-foreground-color);
-	background-color:var(--button-background-color);
-}
-
-.buttonDivSelected {
-	background-color: var(--button-foreground-color);
-	color: var(--button-background-color);
-}
-
-.buttonDivUse:hover {
-	background-color: var(--button-foreground-color);
-	color: var(--button-background-color);
+	/*background-color:var(--button-background-color);*/
 	cursor: pointer;
 }
-.buttonDivUse input{
+.buttonDiv:hover {
+	background-color: var(--button-foreground-color);
+	color: var(--button-background-color);
+}
+.buttonDiv input{
 	position:absolute;
 	height:50px;
 	width: 50px;
 	padding: 0px;
 	margin: 0px;
 	color: var(--button-foreground-color);
-	background-color:var(--button-background-color);
+	/*background-color:var(--button-background-color);*/
 	text-align: center;
 	/*border-radius: 5px;*/
 	opacity: 1.0;
 	display:block;
 	font-size:40px;
 }
+
+.buttonDivInverse{
+	padding: 4px;
+	margin: 0px;
+	text-align: center;
+	border: 2px solid var(--button-background-color);
+	/*border-radius: 5px;*/
+	opacity: 1.0;
+	/*display:block;*/
+	font-size:42px;
+	/*background-color: var(--button-foreground-color);*/
+	color:var(--button-background-color);
+	cursor: pointer;
+}
+.buttonDivInverse:hover {
+	color: var(--button-foreground-color);
+	background-color: var(--button-background-color);
+}
+
 .highlighted{
 	color: var(--highlight-color);
 }
