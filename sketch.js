@@ -47,6 +47,17 @@ function populateMenu(data){
 		})
 	}
 
+	//blank entry
+	menu.append('div')
+		.attr('class','caption')
+		.text('Blank')
+		.style('cursor','pointer')
+		.style('margin-top','50px')
+		.on('click', function(e){
+			d = {'Blank':{}}
+			updateTraining(d);
+		})
+
 	//training button
 	menu.append('div')
 		.attr('class','buttonDiv buttonDivUse')
@@ -98,6 +109,10 @@ function resetInfo(){
 	iDiv.select('#objectDistance').html('')
 	iDiv.select('#objectSize').html('')
 	iDiv.select('#ImageCaption').html('')
+	iDiv.select('#wikipedia').selectAll('span').remove()
+	iDiv.select('#wikipedia').selectAll('a').remove()
+
+	d3.select('#imageDiv').select('img').html('')
 
 	doClassify = true;
 	allResults = [];
@@ -144,18 +159,35 @@ function updateInfo(obj){
 	}
 	if (obj[id].hasOwnProperty('WWTurl')){
 		if (obj[id]['WWTurl'] != null){
-			flyWWT(obj[id]['WWTurl'])
+			//flyWWT(obj[id]['WWTurl'])
 		}
 	}
+	d3.select('#imageDiv').selectAll('img').remove()
 	if (obj[id].hasOwnProperty('images')){
 		if (obj[id]['images'] != null){
 			//in future we can show all images
-			var img = d3.select('#imageDiv').select('img')
-			img.attr('src',obj[id]['images'][0]) 
 			var w = parseFloat(d3.select('#videoDiv').style('width'));
 			var h = parseFloat(d3.select('#videoDiv').style('height'));
-			img.attr('width',w + 'px');
-			img.style('clip', 'rect(0px,'+w+'px,'+h+'px,0px)'); //this doesn't seem to do anythin
+			var img = d3.select('#imageDiv').append('img')
+				.attr('src',obj[id]['images'][0]) 
+				.attr('width',w + 'px')
+				.style('position','absolute')
+				.style('clip', 'rect(0px,'+w+'px,'+h+'px,0px)'); 
+		}
+	}
+	d3.select('#wikipedia').selectAll('span').remove()
+	d3.select('#wikipedia').selectAll('a').remove()
+	if (obj[id].hasOwnProperty('wikipedia')){
+		if (obj[id]['wikipedia'] != null){
+			//in future we can show all images
+			var wiki = d3.select('#wikipedia')
+			wiki.append('span')
+				.attr('class','highlighted')
+				.text('wikipedia: ');
+			wiki.append('a')
+				.attr('href',obj[id]['wikipedia'])
+				.attr('target','_blank')
+				.text(obj[id]['wikipedia']);
 		}
 	}
 }
