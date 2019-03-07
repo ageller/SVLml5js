@@ -201,8 +201,12 @@ function flyWWT(url){
 }
 
 function showImage(images, i){
+	if (i < 0){
+		i = images.length-1;
+	}
 	d3.select('#imageDiv').selectAll('img').remove()
 	imgI = i % images.length;
+	// console.log(i, imgI, images.length, images[imgI])
 
 	img = images[imgI]
 	var w = parseFloat(d3.select('#videoDiv').style('width'));
