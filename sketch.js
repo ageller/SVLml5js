@@ -159,7 +159,7 @@ function updateInfo(obj){
 	}
 	if (obj[id].hasOwnProperty('WWTurl')){
 		if (obj[id]['WWTurl'] != null){
-			//flyWWT(obj[id]['WWTurl'])
+			flyWWT(obj[id]['WWTurl'])
 		}
 	}
 	d3.select('#imageDiv').selectAll('img').remove()
@@ -262,8 +262,10 @@ function gotResults(err, results) {
 		console.log(allResults.length)
 		if (allResults.length >= nResultsTest){
 			if (doClassify){
-				checkResult();
-				doClassify = false;
+				result = checkResult();
+				if (result != 'Blank') {
+					doClassify = false;
+				}
 			}
 		}
 		//updateInfo(objData[results])
@@ -276,17 +278,24 @@ function checkResult(){
 	//something better here!
 	result = allResults[allResults.length - 1]
 
-	//identify the object based on the name
-	for (var key in objData) {
-		objData[key].forEach(function(d,i){
-			if (Object.keys(d)[0] == result){
-				console.log(result, Object.keys(d)[0], objData[key][i], d)
-				doClassify = false;
-				updateInfo(d);
-			}
-		})
+	if (result == "Blank"){
+		allResults = [];
+		doClassify = true;
+		console.log("Blank")
+	} else {
+		//identify the object based on the name
+		for (var key in objData) {
+			objData[key].forEach(function(d,i){
+				if (Object.keys(d)[0] == result){
+					console.log(result, Object.keys(d)[0], objData[key][i], d)
+					doClassify = false;
+					updateInfo(d);
+				}
+			})
+		}
 	}
 
+	return result
 }
 
 ///////////////////////////
@@ -298,7 +307,7 @@ function populateTrainingDiv(){
 
 	d.append('div')
 		.attr('class','buttonDiv buttonDivUse training')
-		.text('Load New Blank Model')
+		.text('Load New Empty Model')
 		.on('click', function(e){
 			featureExtractor = null;
 			classifier = null;
