@@ -147,7 +147,17 @@ function updateInfo(obj){
 			flyWWT(obj[id]['WWTurl'])
 		}
 	}
-
+	if (obj[id].hasOwnProperty('images')){
+		if (obj[id]['images'] != null){
+			//in future we can show all images
+			var img = d3.select('#imageDiv').select('img')
+			img.attr('src',obj[id]['images'][0]) 
+			var w = parseFloat(d3.select('#videoDiv').style('width'));
+			var h = parseFloat(d3.select('#videoDiv').style('height'));
+			img.attr('width',w + 'px');
+			img.style('clip', 'rect(0px,'+w+'px,'+h+'px,0px)'); //this doesn't seem to do anythin
+		}
+	}
 }
 function flyWWT(url){
 	var popup = window.open(url,"WWT", "width=200,height=100");
@@ -393,7 +403,17 @@ function preload(){
 		.style('padding',0)
 		.style('margin',0)
 		.style('width',vWidth + 'px')
-		.style('height',vHeight + 'px')		
+		.style('height',vHeight + 'px')	
+
+	d3.select('#imageDiv')
+		.style('position','absolute')
+		.style('top',m + 'px')
+		.style('left',m +'px')
+		.style('padding',0)
+		.style('margin',0)
+		.style('width',vWidth + 'px')
+		.style('height',vHeight + 'px')	
+		.style('z-index',-1)
 
 	iWidth = parseFloat(window.innerWidth) - vWidth - 3.*m
 	d3.select('#infoDiv')

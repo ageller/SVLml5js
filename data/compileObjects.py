@@ -4,7 +4,7 @@
 # # Read in all json files in a directory and create 1 combined file for app
 # 
 
-# In[167]:
+# In[1]:
 
 
 import pandas as pd
@@ -15,20 +15,20 @@ import os
 
 # ### Read in all the data
 
-# In[168]:
+# In[2]:
 
 
 loc = os.path.join('TileWallData','objectFiles')
 
 
-# In[169]:
+# In[3]:
 
 
 files = os.listdir(loc)
 #print(files)
 
 
-# In[170]:
+# In[4]:
 
 
 objects = {}
@@ -45,7 +45,7 @@ for f in files:
 
 # ### Identify the unique categories, and create the new dataframe
 
-# In[171]:
+# In[5]:
 
 
 categories = list(set(categories))
@@ -55,7 +55,7 @@ for c in categories:
     dictOut[c] = []
 
 
-# In[172]:
+# In[6]:
 
 
 for key, o in objects.items():
@@ -65,7 +65,7 @@ for key, o in objects.items():
 
 # ### Dump this to json
 
-# In[173]:
+# In[7]:
 
 
 with open('allObjects.json', 'w') as fp:
@@ -76,7 +76,7 @@ with open('allObjects.json', 'w') as fp:
 # 
 # ```jupyter nbconvert --to script [YOUR_NOTEBOOK].ipynb```
 
-# In[114]:
+# In[8]:
 
 
 get_ipython().system('jupyter nbconvert --to script compileObjects.ipynb')
