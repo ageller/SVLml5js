@@ -186,7 +186,7 @@ function updateInfo(obj){
 			var wiki = d3.select('#wikipedia')
 			wiki.append('span')
 				.attr('class','highlighted')
-				.text('wikipedia: ');
+				.text('Wikipedia: ');
 			wiki.append('a')
 				.attr('href',obj[id]['wikipedia'])
 				.attr('target','_blank')
