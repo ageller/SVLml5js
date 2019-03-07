@@ -18,29 +18,52 @@ import os
 # In[2]:
 
 
-loc = os.path.join('TileWallData','objectFiles')
+def getData(loc):
+    files = os.listdir(loc)
+    objects = {}
+    categories = []
+    for f in files:
+        if (f[0] != '.'):
+            print(f)
+            df = pd.read_json(os.path.join(loc,f),typ='dict', encoding = "ISO-8859-1", convert_axes = False)
+        # had a problem with pandas wanting to automatically convert M60 to a Timestamp!
+        #     if (f == "M60.json"):
+        #         print(f)
+        #         print(df)
+            objects.update(df)
+            categories.append(df[0]['Category'])
+        
+    return objects, categories
 
+
+# *From the TileWall files*
 
 # In[3]:
 
 
-files = os.listdir(loc)
-#print(files)
+loc = os.path.join('TileWallData','objectFiles')
+objects, categories = getData(loc)
 
+
+# *Check for other files added by users*
 
 # In[4]:
 
 
-objects = {}
-categories = []
-for f in files:
-    df = pd.read_json(os.path.join(loc,f),typ='dict', encoding = "ISO-8859-1", convert_axes = False)
-# had a problem with pandas wanting to automatically convert M60 to a Timestamp!
-#     if (f == "M60.json"):
-#         print(f)
-#         print(df)
-    objects.update(df)
-    categories.append(df[0]['Category'])
+loc = 'userObjects'
+if (os.path.isdir(loc)):
+    files = os.listdir(loc)
+    if (len(files) > 0):
+        ob, ca = getData(loc)
+        
+        categories.extend(ca)
+        if (len(ob) > 1):
+            for o in ob:
+                objects.update(o)
+        else:
+            objects.update(ob)
+
+#print(categories)
 
 
 # ### Identify the unique categories, and create the new dataframe
@@ -76,8 +99,8 @@ with open('allObjects.json', 'w') as fp:
 # 
 # ```jupyter nbconvert --to script [YOUR_NOTEBOOK].ipynb```
 
-# In[8]:
+# In[9]:
 
 
-get_ipython().system('jupyter nbconvert --to script compileObjects.ipynb')
+#!jupyter nbconvert --to script compileObjects.ipynb
 
