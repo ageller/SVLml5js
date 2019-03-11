@@ -162,6 +162,7 @@ function updateInfo(obj){
 	if (obj[id].hasOwnProperty('WWTurl')){
 		if (obj[id]['WWTurl'] != null){
 			//flyWWT(obj[id]['WWTurl'])
+			launchVLC3D('foo')
 		}
 	}
 	d3.select('#imageDiv').selectAll('img').remove()
@@ -200,7 +201,21 @@ function flyWWT(url){
 	//popup.blur(); //doesn't work
 	//window.focus();
 }
+function launchVLC3D(movie){
+	//testing for now
+	var popup = window.open("http://192.168.13.178:8080/requests/status.xml?command=pl_empty","VLC3D", "width=200,height=100");
+	setTimeout(function() {
+		popup.location.replace("http://192.168.13.178:8080/requests/status.xml?command=in_enqueue&input=/Users/svladler/AstroConversationMedia/Movies3D_TopBottom/Stars/Sun/EUVI_171_Angstroms-TB2.mov")},
+		200);
+	setTimeout(function() {
+		popup.location.replace("http://192.168.13.178:8080/requests/status.xml?command=pl_play")},
+		400);
+	setTimeout(function() {
+		popup.location.replace("http://192.168.13.178:8080/requests/status.xml?command=fullscreen")},
+		600);
+	setTimeout(function() {popup.close();}, 1000); //I want to make this fire onload, but it won't let me
 
+}
 function showImage(images, i){
 	if (i < 0){
 		i = images.length-1;
