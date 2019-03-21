@@ -19,7 +19,7 @@ let shrink = 0.2; //fraction to shrink down the video when showing image
 let numObjects = 2;
 let trainingDelay = 100;
 let tTrans = d3.transition().duration(1000);
-let allResults = [];
+let allResults = {"label":[], "confidence":[]};
 let nResultsTest = 100;
 let imgI = 0;
 
@@ -295,7 +295,7 @@ function classify() {
 	classifier.classify(function(err, results){
 		gotResults(err, results)
 	}); 
-	//classifier.predict(gotResults)
+	// classifier.predict(gotResults)
 }
 
 
@@ -309,11 +309,14 @@ function gotResults(err, results) {
 	if (err) {
 		console.error(err);
 	}
-	if (results) {
-		label = results;
-		allResults.push(results)
-		console.log(allResults.length)
-		if (allResults.length >= nResultsTest){
+	if (results && results[0]) {
+		console.log("result, err", err, results[0])
+		label = results[0].label;
+		confidence = results[0].confidence;
+		allResults.label.push(results[0].label)
+		allResults.confidence.push(results[0].confidence)
+		console.log(allResults.label.length)
+		if (allResults.label.length >= nResultsTest){
 			if (doClassify){
 				result = checkResult();
 				if (result != 'Blank') {
@@ -326,13 +329,16 @@ function gotResults(err, results) {
 }
 function checkResult(){
 	console.log("in checkResult")
-	console.log(allResults)
+	console.log("labels", allResults.label)
+	console.log("confidence", allResults.confidence)
 
 	//something better here!
-	result = allResults[allResults.length - 1]
+	i = allResults.label.length - 1;
+	result = allResults.label[i];
+	confidence = allResults.confidence[i];
 
 	if (result == "Blank"){
-		allResults = [];
+		allResults = {"label":[], "confidence":[]};
 		doClassify = true;
 		console.log("Blank")
 	} else {
