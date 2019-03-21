@@ -162,7 +162,7 @@ function updateInfo(obj){
 	if (obj[id].hasOwnProperty('WWTurl')){
 		if (obj[id]['WWTurl'] != null){
 			//flyWWT(obj[id]['WWTurl'])
-			launchVLC3D('foo')
+			//launchVLC3D('foo')
 		}
 	}
 	d3.select('#imageDiv').selectAll('img').remove()
