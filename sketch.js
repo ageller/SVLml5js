@@ -13,15 +13,17 @@ let iWidth;
 let vHeight;
 let menuWidth;
 let menuLeft;
-let menuVisible = false;
 let loss;
-let shrink = 0.2; //fraction to shrink down the video when showing image
+let shrink = 1.0; //fraction to shrink down the video when showing image (set to 0.2 below)
 let numObjects = 2;
 let trainingDelay = 100;
 let tTrans = d3.transition().duration(1000);
 let allResults = {"label":[], "confidence":[]};
 let nResultsTest = 100;
 let imgI = 0;
+let showingVideo = true;
+let showingTraining = false;
+let showingMenu = false;
 
 function populateMenu(data){
 	var menu = d3.select('#objectMenu')
@@ -74,16 +76,18 @@ function populateMenu(data){
 			d3.select('#infoDiv').classed('hidden',true)
 			d3.select('#trainingDiv').classed('hidden',false)
 			doClassify = false;
+			showingTraining = true;
+			showingVideo = true;
 		})
 
 }
 
 function showHideMenu(x){
-	menuVisible = !menuVisible;
+	showingMenu = !showingMenu;
 
 	x.classList.toggle("change");
 	var useiWidth = iWidth
-	if (menuVisible){
+	if (showingMenu){
 		menuLeft = parseFloat(window.innerWidth) - menuWidth;
 		useiWidth -= menuWidth
 	} else {
@@ -96,13 +100,13 @@ function showHideMenu(x){
 }
 
 function resetInfo(){
-	shrink = 0.2;
+	shrink = 1.0;
 	d3.select('canvas').transition(tTrans)
-		.style('width',vWidth+'px')
-		.style('height',vHeight+'px');
+		.style('width',vWidth*shrink+'px')
+		.style('height',vHeight*shrink+'px');
 	d3.select('#videoDiv').transition(tTrans)
-		.style('width',vWidth+'px')
-		.style('height',vHeight+'px');
+		.style('width',vWidth*shrink+'px')
+		.style('height',vHeight*shrink+'px');
 
 	var iDiv = d3.select('#infoDiv')
 	iDiv.select('#objectName').html('')
@@ -115,25 +119,23 @@ function resetInfo(){
 	d3.select('#imageDiv').select('img').html('')
 
 	doClassify = true;
-	allResults = [];
+	allResults = {"label":[], "confidence":[]};
 
 }
 
 
 function updateInfo(obj){
 	//shrink the video
-	var cvs = d3.select('canvas');
-	var w = parseFloat(cvs.style('width'));
-	var h = parseFloat(cvs.style('height'));
-	cvs.transition(tTrans)
-		.style('width',w*shrink+'px')
-		.style('height',h*shrink+'px')
+	showingVideo = false;
+	shrink = 0.2
+	d3.select('canvas').transition(tTrans)
+		.style('width',vWidth*shrink+'px')
+		.style('height',vHeight*shrink+'px');
 	d3.select('#videoDiv').transition(tTrans)
-		.style('width',w*shrink+'px')
-		.style('height',h*shrink+'px')
+		.style('width',vWidth*shrink+'px')
+		.style('height',vHeight*shrink+'px');
 
 	var iDiv = d3.select('#infoDiv')
-	shrink = 1.
 
 	id = Object.keys(obj)[0]
 	if (obj.hasOwnProperty(id)){
@@ -171,6 +173,7 @@ function updateInfo(obj){
 		if (obj[id]['images'] != null){
 			showImage(obj[id]['images'], imgI);
 			d3.select('#imageDiv').selectAll('div').classed("hidden",false)
+			console.log("here",d3.select('#imageDiv').selectAll('div'))
 			d3.select('#forwardImage').on('click', function(){
 				showImage(obj[id]['images'], imgI+1)
 			})
@@ -362,7 +365,8 @@ function checkResult(){
 ///////////////////////////
 function populateTrainingDiv(){
 
-	d = d3.select('#trainingDiv')
+	d = d3.select('#trainingDiv');
+	d.selectAll('div').remove();
 
 	d.append('div')
 		.attr('class','buttonDiv training')
@@ -438,6 +442,7 @@ function populateTrainingDiv(){
 			doClassify = true;
 			d3.select('#infoDiv').classed('hidden',false)
 			d3.select('#trainingDiv').classed('hidden',true)
+			showingTraining = false;
 		})
 
 
@@ -482,7 +487,7 @@ function whileTraining(lossValue) {
 
 // set all the sizes
 function preload(){
-	console.log('resizing...')
+	console.log('resizing...', showingVideo, showingTraining)
 
 	var m = 10; //margin
 	var b = 50; //button height
@@ -496,14 +501,22 @@ function preload(){
 		vHeight = vWidth*aspect;
 	}
 
+	var cvs = d3.select('canvas');
+	if (cvs != null){
+		resizeCanvas(vWidth, vHeight);
+		cvs.style('width',vWidth*shrink+'px')
+			.style('height',vHeight*shrink+'px');
+	}
+
+
 	d3.select('#videoDiv')
 		.style('position','absolute')
 		.style('top',m + 'px')
 		.style('left',m +'px')
 		.style('padding',0)
 		.style('margin',0)
-		.style('width',vWidth + 'px')
-		.style('height',vHeight + 'px')	
+		.style('width',vWidth*shrink + 'px')
+		.style('height',vHeight*shrink + 'px')	
 		.style('z-index',4)
 
 	d3.select('#imageDiv')
@@ -555,37 +568,51 @@ function preload(){
 		.style('padding',0)
 		.style('width',iWidth + 'px')
 		.style('height',vHeight + b + m + 'px')
-		.classed('hidden',true)
+		.classed('hidden',!showingTraining)
 
-	var cvs = d3.select('canvas');
-	if (cvs != null){
-		resizeCanvas(vWidth, vHeight);
-	}
+
 
 	//buttons to look through images
-	d3.select('#imageDiv').append('div')
-		.attr('id','forwardImage')
-		.attr('class','buttonDivInverse')
-		.style('position','absolute')
-		.style('top',vHeight/2 - 30 + 'px')
-		.style('right','15px')
-		.style('font-size', '60px')
-		.style('background-color','None')
-		.style('z-index',1)
-		.text('>')
-		.classed('hidden',true)
+	//check if we need to create the buttons
+	var x = d3.select('#imageDiv').select('#forwardImage');
+	if (x.node() == null){
+		x = d3.select('#imageDiv').append('div')
+			.attr('id','forwardImage')
+			.attr('class','buttonDivInverse')
+			.style('position','absolute')
+			.style('font-size', '60px')
+			.style('background-color','None')
+			.style('z-index',1)
+			.style('right','15px')
+			.text('>')
+			.classed('hidden',showingVideo);
+	}
+	x.style('top',vHeight/2 - 30 + 'px')
 
-	d3.select('#imageDiv').append('div')
-		.attr('id','backwardImage')
-		.attr('class','buttonDivInverse')
-		.style('position','absolute')
-		.style('top',vHeight/2 - 30 + 'px')
-		.style('left','15px')
-		.style('font-size', '60px')
-		.style('background-color','None')
-		.style('z-index',1)
-		.text('<')	
-		.classed('hidden',true)
+	var x = d3.select('#imageDiv').select('#backwardImage');
+	if (x.node() == null){
+		x = d3.select('#imageDiv').append('div')
+			.attr('id','backwardImage')
+			.attr('class','buttonDivInverse')
+			.style('position','absolute')
+			.style('left','15px')
+			.style('font-size', '60px')
+			.style('background-color','None')
+			.style('z-index',1)
+			.text('<')	
+			.classed('hidden',showingVideo);
+	}
+	x.style('top',vHeight/2 - 30 + 'px');
+
+	//resize image if necessary
+	var w = parseFloat(d3.select('#imageDiv').style('width'));
+	var h = parseFloat(d3.select('#imageDiv').style('height'));
+
+	var x = d3.select('#imageDiv').select('img')
+	if (x.node() != null){
+		x.attr('width',w + 'px')
+			.style('clip', 'rect(0px,'+w+'px,'+h+'px,0px)')
+	}
 
 	populateTrainingDiv()
 }
