@@ -126,6 +126,7 @@ function resetInfo(){
 
 function updateInfo(obj){
 	//shrink the video
+	imgI = 0;
 	showingVideo = false;
 	shrink = 0.2
 	d3.select('canvas').transition(tTrans)
