@@ -531,17 +531,24 @@ function preload(){
 		// .style('z-index',-1)
 
 	iWidth = parseFloat(window.innerWidth) - vWidth - 3.*m
+	var useiWidth = iWidth
+	if (showingMenu){
+		menuLeft = parseFloat(window.innerWidth) - menuWidth;
+		useiWidth -= menuWidth
+	} else {
+		menuLeft = parseFloat(window.innerWidth);
+	}
+
 	d3.select('#infoDiv')
 		.style('position','absolute')
 		.style('top',m + 'px')
 		.style('left',(vWidth + 2.*m) +'px')
 		.style('margin',0)
 		.style('padding',0)
-		.style('width',iWidth + 'px')
+		.style('width',useiWidth + 'px')
 		.style('height',vHeight + b + m + 'px')
 
 	menuWidth = 0.25*parseFloat(window.innerWidth);
-	menuLeft = parseFloat(window.innerWidth);
 	d3.select('#objectMenu')
 		.style('position','absolute')
 		.style('top',0)
@@ -566,7 +573,7 @@ function preload(){
 		.style('left',(vWidth + 2.*m) +'px')
 		.style('margin',0)
 		.style('padding',0)
-		.style('width',iWidth + 'px')
+		.style('width',useiWidth + 'px')
 		.style('height',vHeight + b + m + 'px')
 		.classed('hidden',!showingTraining)
 
@@ -613,6 +620,8 @@ function preload(){
 		x.attr('width',w + 'px')
 			.style('clip', 'rect(0px,'+w+'px,'+h+'px,0px)')
 	}
+
+
 
 	populateTrainingDiv()
 }
