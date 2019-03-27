@@ -41,7 +41,6 @@ function populateMenu(data){
 				var header = d3.select('#'+id);
 				var content = d3.select('#'+id+'Content');
 				var bool = header.classed("active");
-				console.log(bool, content.node().scrollHeight)
 				if (!bool){
 					content.style('max-height',parseFloat(content.node().scrollHeight) + "px");
 				} else {

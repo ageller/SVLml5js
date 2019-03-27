@@ -131,6 +131,8 @@ body {
 	max-height: 0;
 	overflow: hidden;
 	transition: max-height 0.2s ease-out;
+	cursor:pointer;
+	margin-left:20px;
 }
 
 .collapsible:after {
@@ -138,6 +140,7 @@ body {
 	font-size: 13px;
 	float: left;
 	margin-left: 5px;
+	padding-top:5px;
 	cursor:pointer;
 }
 .active:after {
@@ -145,5 +148,6 @@ body {
 	font-size: 13px;
 	float: left;
 	margin-left: 5px;
+	padding-top:5px;
 	cursor:pointer;
 }
