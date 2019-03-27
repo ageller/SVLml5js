@@ -127,6 +127,8 @@ body {
 	height: 20px;
 	font-size: 16px;
 }
+.trainingText{}
+
 .content {
 	max-height: 0;
 	overflow: hidden;

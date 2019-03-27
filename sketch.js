@@ -116,6 +116,7 @@ function showHideMenu(x){
 	}
 	d3.select('#infoDiv').transition(tTrans).style('width',useiWidth + 'px')
 	d3.select('#trainingDiv').transition(tTrans).style('width',useiWidth + 'px')
+	d3.select('#trainingDiv').selectAll('.trainingText').transition(tTrans).style('width',useiWidth -10 + 'px')
 	d3.select('#objectMenu').transition(tTrans).style('left',menuLeft + 'px');
 
 }
@@ -387,6 +388,11 @@ function checkResult(){
 ///////////////////////////
 function populateTrainingDiv(){
 
+	var useiWidth = iWidth
+	if (showingMenu){
+		useiWidth -= menuWidth
+	} 
+
 	d = d3.select('#trainingDiv');
 	d.selectAll('div').remove();
 
@@ -408,9 +414,9 @@ function populateTrainingDiv(){
 		})
 
 	d.append('div')
-		.attr('class','training')
+		.attr('class','training trainingText')
 		.style('margin-top','30px')
-		.style('width',iWidth - 10 + 'px')
+		.style('width',useiWidth - 10 + 'px')
 		.text("Training Status : ")
 		.append('span')
 			.attr('id','trainingStatus')
@@ -418,8 +424,8 @@ function populateTrainingDiv(){
 			.text('--')
 
 	d.append('div')
-		.attr('class','training')
-		.style('width',iWidth - 10 + 'px')
+		.attr('class','training trainingText')
+		.style('width',useiWidth - 10 + 'px')
 		.text("Number of objects in training set : ")
 		.append('span')
 			.attr('id','trainingNumber')
@@ -428,8 +434,8 @@ function populateTrainingDiv(){
 
 
 	d.append('div')
-		.attr('class','training')
-		.style('width',iWidth - 10 + 'px')
+		.attr('class','training trainingText')
+		.style('width',useiWidth - 10 + 'px')
 		.text("Training model on : ")
 		.append('span')
 			.attr('id','trainingObject')
@@ -598,7 +604,6 @@ function preload(){
 		.style('width',useiWidth + 'px')
 		.style('height',vHeight + b + m + 'px')
 		.classed('hidden',!showingTraining)
-
 
 
 	//buttons to look through images
