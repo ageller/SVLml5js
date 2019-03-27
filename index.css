@@ -127,3 +127,23 @@ body {
 	height: 20px;
 	font-size: 16px;
 }
+.content {
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.2s ease-out;
+}
+
+.collapsible:after {
+	content: '\02795'; /* Unicode character for "plus" sign (+) */
+	font-size: 13px;
+	float: left;
+	margin-left: 5px;
+	cursor:pointer;
+}
+.active:after {
+	content: "\2796"; /* Unicode character for "minus" sign (-) */
+	font-size: 13px;
+	float: left;
+	margin-left: 5px;
+	cursor:pointer;
+}

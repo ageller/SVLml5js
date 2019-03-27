@@ -26,17 +26,39 @@ let showingTraining = false;
 let showingMenu = false;
 
 function populateMenu(data){
+	//https://www.w3schools.com/howto/howto_js_collapsible.asp
 	var menu = d3.select('#objectMenu')
 	for (var key in data) {
+		var id = key.replace(/\s/g, '');
 		menu.append('div')
-			.attr('class','subTitle')
+			.attr('class','subTitle collapsible')
+			.attr('id',id)
+			.style('cursor','pointer')
 			.text(key)
+			.on('click', function(e){
+				//show/hide objects
+				var id = this.innerHTML.replace(/\s/g, '');
+				var header = d3.select('#'+id);
+				var content = d3.select('#'+id+'Content');
+				var bool = header.classed("active");
+				console.log(bool, content.node().scrollHeight)
+				if (!bool){
+					content.style('max-height',parseFloat(content.node().scrollHeight) + "px");
+				} else {
+					content.style('max-height', 0);
+				}
+				header.classed("active", !bool);
+			})
 		//for (var id in data[key]){
 		//	var d = data[key][id]
 		//	console.log(key, id, d)
+		var keyDiv = menu.append('div')
+			.attr('id',id+'Content')
+			.attr('class','content');
+
 		data[key].forEach(function(d){
 			numObjects += 1;
-			menu.append('div')
+			keyDiv.append('div')
 				.attr('class','caption')
 				.text(Object.keys(d)[0])
 				.style('cursor','pointer')
