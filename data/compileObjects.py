@@ -47,7 +47,7 @@ objects, categories = getData(loc)
 
 # *Check for other files added by users*
 
-# In[4]:
+# In[8]:
 
 
 loc = 'userObjects'
@@ -57,18 +57,12 @@ if (os.path.isdir(loc)):
         ob, ca = getData(loc)
         
         categories.extend(ca)
-        if (len(ob) > 1):
-            for o in ob:
-                objects.update(o)
-        else:
-            objects.update(ob)
-
-#print(categories)
+        objects.update(ob)
 
 
 # ### Identify the unique categories, and create the new dataframe
 
-# In[5]:
+# In[9]:
 
 
 categories = list(set(categories))
@@ -78,7 +72,7 @@ for c in categories:
     dictOut[c] = []
 
 
-# In[6]:
+# In[10]:
 
 
 for key, o in objects.items():
@@ -88,7 +82,7 @@ for key, o in objects.items():
 
 # ### Dump this to json
 
-# In[7]:
+# In[11]:
 
 
 with open('allObjects.json', 'w') as fp:
@@ -99,7 +93,7 @@ with open('allObjects.json', 'w') as fp:
 # 
 # ```jupyter nbconvert --to script [YOUR_NOTEBOOK].ipynb```
 
-# In[9]:
+# In[12]:
 
 
 #!jupyter nbconvert --to script compileObjects.ipynb
