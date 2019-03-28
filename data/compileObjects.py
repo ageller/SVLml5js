@@ -19,13 +19,21 @@ import os
 
 
 def getData(loc):
-    files = os.listdir(loc)
+    files = []
+    locDict = {} #a dict to attach the location to each file for later, so that I can sort by filename
+    for lo in loc:
+        print(lo)
+        ff = os.listdir(lo)
+        for f in ff:
+            locDict[f] = lo
+        files.extend(ff)
+    files = sorted(files, key=str.lower) #sort by filename (which should be the object name as well)
     objects = {}
     categories = []
     for f in files:
         if (f[0] != '.'):
             print(f)
-            df = pd.read_json(os.path.join(loc,f),typ='dict', encoding = "ISO-8859-1", convert_axes = False)
+            df = pd.read_json(os.path.join(locDict[f],f),typ='dict', encoding = "ISO-8859-1", convert_axes = False)
         # had a problem with pandas wanting to automatically convert M60 to a Timestamp!
         #     if (f == "M60.json"):
         #         print(f)
@@ -36,43 +44,29 @@ def getData(loc):
     return objects, categories
 
 
-# *From the TileWall files*
+# *From the TileWall files and user object*
 
 # In[3]:
 
 
-loc = os.path.join('TileWallData','objectFiles')
-objects, categories = getData(loc)
-
-
-# *Check for other files added by users*
-
-# In[8]:
-
-
-loc = 'userObjects'
-if (os.path.isdir(loc)):
-    files = os.listdir(loc)
-    if (len(files) > 0):
-        ob, ca = getData(loc)
-        
-        categories.extend(ca)
-        objects.update(ob)
+loc1 = os.path.join('TileWallData','objectFiles')
+loc2 = 'userObjects'
+objects, categories = getData([loc1, loc2])
 
 
 # ### Identify the unique categories, and create the new dataframe
 
-# In[9]:
+# In[12]:
 
 
-categories = list(set(categories))
+categories = sorted(list(set(categories)), key=str.lower)
 print(categories)
 dictOut = {}
 for c in categories:
     dictOut[c] = []
 
 
-# In[10]:
+# In[5]:
 
 
 for key, o in objects.items():
@@ -82,19 +76,10 @@ for key, o in objects.items():
 
 # ### Dump this to json
 
-# In[11]:
+# In[6]:
 
 
 with open('allObjects.json', 'w') as fp:
     json.dump(dictOut, fp)
 
-
-# # Put this into a stand-alone python code as well.
-# 
-# ```jupyter nbconvert --to script [YOUR_NOTEBOOK].ipynb```
-
-# In[12]:
-
-
-#!jupyter nbconvert --to script compileObjects.ipynb
 
