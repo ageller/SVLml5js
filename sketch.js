@@ -186,7 +186,7 @@ function updateInfo(obj){
 	}
 	if (obj[id].hasOwnProperty('WWTurl')){
 		if (obj[id]['WWTurl'] != null){
-			flyWWT(obj[id]['WWTurl'])
+			//flyWWT(obj[id]['WWTurl'])
 			//launchVLC3D('foo')
 		}
 	}
