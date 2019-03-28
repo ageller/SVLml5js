@@ -18,12 +18,12 @@ let shrink = 1.0; //fraction to shrink down the video when showing image (set to
 let numObjects = 2;
 let trainingDelay = 100;
 let tTrans = d3.transition().duration(1000);
-let allResults = {"label":[], "confidence":[]};
-let nResultsTest = 100;
 let imgI = 0;
 let showingVideo = true;
 let showingTraining = false;
 let showingMenu = false;
+
+let confidenceLim = 0.9995; //limit before object is considered identified.
 
 function populateMenu(data){
 	//https://www.w3schools.com/howto/howto_js_collapsible.asp
@@ -141,7 +141,6 @@ function resetInfo(){
 	d3.select('#imageDiv').select('img').html('')
 
 	doClassify = true;
-	allResults = {"label":[], "confidence":[]};
 
 }
 
@@ -337,51 +336,27 @@ function gotResults(err, results) {
 		console.error(err);
 	}
 	if (results && results[0]) {
-		console.log("result, err", err, results[0])
+		console.log("err, results[0]", err, results[0])
 		label = results[0].label;
 		confidence = results[0].confidence;
-		allResults.label.push(results[0].label)
-		allResults.confidence.push(results[0].confidence)
-		console.log(allResults.label.length)
-		if (allResults.label.length >= nResultsTest){
-			if (doClassify){
-				result = checkResult();
-				if (result != 'Blank') {
-					doClassify = false;
+		if (confidence > confidenceLim){
+			if (label == "Blank"){
+				doClassify = true;
+			} else {
+				console.log("have result", label)
+			//identify the object based on the name
+				for (var key in objData) {
+					objData[key].forEach(function(d,i){
+						if (Object.keys(d)[0] == label){
+							console.log(label, Object.keys(d)[0], objData[key][i], d)
+							doClassify = false;
+							updateInfo(d);
+						}
+					})
 				}
 			}
 		}
-		//updateInfo(objData[results])
-  }
-}
-function checkResult(){
-	console.log("in checkResult")
-	console.log("labels", allResults.label)
-	console.log("confidence", allResults.confidence)
-
-	//something better here!
-	i = allResults.label.length - 1;
-	result = allResults.label[i];
-	confidence = allResults.confidence[i];
-
-	if (result == "Blank"){
-		allResults = {"label":[], "confidence":[]};
-		doClassify = true;
-		console.log("Blank")
-	} else {
-		//identify the object based on the name
-		for (var key in objData) {
-			objData[key].forEach(function(d,i){
-				if (Object.keys(d)[0] == result){
-					console.log(result, Object.keys(d)[0], objData[key][i], d)
-					doClassify = false;
-					updateInfo(d);
-				}
-			})
-		}
 	}
-
-	return result
 }
 
 ///////////////////////////
@@ -502,6 +477,7 @@ function updateTraining(obj){
 
 function whileTraining(lossValue) {
 	d3.select('#trainingStatus').classed('highlighted',true);
+	console.log("loss",lossValue)
 	if (lossValue) {
 		loss = lossValue;
 		d3.select('#trainingStatus').text('Loss: ' + loss);
