@@ -134,11 +134,12 @@ function resetInfo(){
 	iDiv.select('#objectName').html('')
 	iDiv.select('#objectDistance').html('')
 	iDiv.select('#objectSize').html('')
-	iDiv.select('#ImageCaption').html('')
+	iDiv.select('#objectNotes').html('')
 	iDiv.select('#wikipedia').selectAll('span').remove()
 	iDiv.select('#wikipedia').selectAll('a').remove()
 
 	d3.select('#imageDiv').select('img').html('')
+	d3.select('#imageCaption').html('')
 
 	doClassify = true;
 
@@ -179,7 +180,7 @@ function updateInfo(obj){
 	}
 	if (obj[id].hasOwnProperty('Notes')){
 		if (obj[id]['Notes'] != null){
-			iDiv.select('#ImageCaption')
+			iDiv.select('#objectNotes')
 				.html('<span class="highlighted"> Notes: </span>'+obj[id]['Notes'])
 		}
 	}
@@ -191,16 +192,17 @@ function updateInfo(obj){
 	}
 	d3.select('#imageDiv').selectAll('img').remove()
 	d3.select('#imageDiv').selectAll('div').classed("hidden",true)
+	d3.select('#imageCaption').classed("hidden",true);
 	if (obj[id].hasOwnProperty('images')){
 		if (obj[id]['images'] != null){
-			showImage(obj[id]['images'], imgI);
+			showImage(obj[id]['images'], obj[id]['captions'], imgI);
 			d3.select('#imageDiv').selectAll('div').classed("hidden",false)
 			console.log("here",d3.select('#imageDiv').selectAll('div'))
 			d3.select('#forwardImage').on('click', function(){
-				showImage(obj[id]['images'], imgI+1)
+				showImage(obj[id]['images'], obj[id]['captions'], imgI+1)
 			})
 			d3.select('#backwardImage').on('click', function(){
-				showImage(obj[id]['images'], imgI-1)
+				showImage(obj[id]['images'], obj[id]['captions'], imgI-1)
 			})
 		}
 	}
@@ -242,7 +244,25 @@ function launchVLC3D(movie){
 	console.log("showing video")
 
 }
-function showImage(images, i){
+function showCaption(cap){
+	var h = parseFloat(d3.select('#imageDiv').style('height'));
+	var x = d3.select('#imageCaption')
+	x.classed("hidden",false);
+	if (cap != null){
+		x.html('<span class="highlighted"> Image Caption: </span>'+cap)
+		var hc = min(parseFloat(x.style('max-height')), parseFloat(x.node().scrollHeight));
+		if (parseFloat(x.style('max-height')) < parseFloat(x.node().scrollHeight)){
+			hc += 10; //for padding, but not sure why I need this if statement
+		}
+		x.style('top',h-hc-2+'px'); //2 for border
+		console.log(hc, x.node().scrollHeight)
+		return hc
+	} else {
+		return 0
+	}
+}
+
+function showImage(images, captions, i){
 	if (i < 0){
 		i = images.length-1;
 	}
@@ -252,8 +272,12 @@ function showImage(images, i){
 	// console.log(i, imgI, images.length, images[imgI])
 
 	img = images[imgI]
+	cap = captions[imgI]
 	var w = parseFloat(d3.select('#imageDiv').style('width'));
 	var h = parseFloat(d3.select('#imageDiv').style('height'));
+
+	var hc = showCaption(cap);
+	h -= hc;
 
 	d3.select('#imageDiv').append('a')
 		.attr('href',img)
@@ -272,9 +296,6 @@ function showImage(images, i){
 				}
 
 			})
-	
-
-
 
 }
 function initializeML(numClasses=null){
@@ -535,6 +556,27 @@ function preload(){
 		.style('background-color','black')
 		// .style('z-index',-1)
 
+	var hc = 100;
+	var x = d3.select('#imageCaption');
+	if (x.node() != null){
+		hc = min(100, parseFloat(x.node().scrollHeight));
+		if (parseFloat(x.style('max-height')) < parseFloat(x.node().scrollHeight)){
+			hc += 10; //for padding, but not sure why I need this if statement
+		}
+	}
+	d3.select('#imageCaption')
+		.style('position','absolute')
+		.style('top',vHeight-hc-2 + 'px') //for borders
+		.style('left',-2) //for borders
+		.style('padding','5px')
+		.style('margin',0)
+		.style('width',vWidth-10 + 'px')//for padding
+		.style('max-height',100 + 'px')	
+		.style('background-color',getComputedStyle(document.documentElement).getPropertyValue('--background-color'))
+		.style('color',getComputedStyle(document.documentElement).getPropertyValue('--foreground-color'))
+		// .style('color','white')
+		// .style('z-index',-1)
+
 	iWidth = parseFloat(window.innerWidth) - vWidth - 3.*m
 	var useiWidth = iWidth
 	if (showingMenu){
@@ -618,7 +660,7 @@ function preload(){
 	//resize image if necessary
 	var w = parseFloat(d3.select('#imageDiv').style('width'));
 	var h = parseFloat(d3.select('#imageDiv').style('height'));
-
+	h -= hc;
 	var x = d3.select('#imageDiv').select('img')
 	if (x.node() != null){
 		x.attr('width',w + 'px')
