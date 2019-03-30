@@ -197,7 +197,6 @@ function updateInfo(obj){
 		if (obj[id]['images'] != null){
 			showImage(obj[id]['images'], obj[id]['captions'], imgI);
 			d3.select('#imageDiv').selectAll('div').classed("hidden",false)
-			console.log("here",d3.select('#imageDiv').selectAll('div'))
 			d3.select('#forwardImage').on('click', function(){
 				showImage(obj[id]['images'], obj[id]['captions'], imgI+1)
 			})
@@ -255,7 +254,6 @@ function showCaption(cap){
 			hc += 10; //for padding, but not sure why I need this if statement
 		}
 		x.style('top',h-hc-2+'px'); //2 for border
-		console.log(hc, x.node().scrollHeight)
 		return hc
 	} else {
 		return 0
@@ -279,6 +277,7 @@ function showImage(images, captions, i){
 	var hc = showCaption(cap);
 	h -= hc;
 
+
 	d3.select('#imageDiv').append('a')
 		.attr('href',img)
 		.attr('target','_blank')
@@ -286,11 +285,15 @@ function showImage(images, captions, i){
 			.attr('src',img) 
 			.attr('width',w + 'px')
 			.style('position','absolute')
-			.style('clip', 'rect(0px,'+w+'px,'+h+'px,0px)')
 			.style('z-index',0)
 			.on('load', function(){
 				var i = d3.select('#imageDiv').select('img');
 				var h2 = parseFloat(i.style('height'))
+				//try to center the image when clipping
+				var offset = max((h2 - h)/2.,0);
+				var ctop = h+offset;
+				i.style('clip', 'rect('+offset+'px,'+w+'px,'+ctop+'px,0px)')
+				i.style('top',-offset+'px')
 				if (h > h2){
 					i.style('margin-top',(h-h2)/2. + 'px')
 				}
@@ -662,9 +665,16 @@ function preload(){
 	var h = parseFloat(d3.select('#imageDiv').style('height'));
 	h -= hc;
 	var x = d3.select('#imageDiv').select('img')
+
 	if (x.node() != null){
+		var h2 = parseFloat(x.style('height'))
+		//try to center the image when clipping
+		var offset = max((h2 - h)/2.,0);
+		var ctop = h+offset;
 		x.attr('width',w + 'px')
-			.style('clip', 'rect(0px,'+w+'px,'+h+'px,0px)')
+			.style('clip', 'rect('+offset+'px,'+w+'px,'+ctop+'px,0px)')
+			.style('top',-offset+'px')
+
 	}
 
 
