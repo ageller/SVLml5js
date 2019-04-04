@@ -99,7 +99,10 @@ body {
 	display:block;
 	font-size:40px;
 }
-
+.buttonDivActive {
+	background-color: var(--button-foreground-color);
+	color: var(--button-background-color);
+}
 .buttonDivInverse{
 	padding: 4px;
 	margin: 0px;

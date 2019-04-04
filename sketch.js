@@ -26,11 +26,13 @@ let showingMenu = false;
 let confidenceLim = 0.9995; //limit before object is considered identified.
 
 //for background subtraction
+let useBackground = true; //start with background subtraction
 let captureBackground = true; //start with background subtraction
-let nBackground = 10;
+let initialCapture = true;
+let nBackground = 100;
 let iBackground = 0;
-let rhoBackground = 0.01;
-let backgroundThreshold = 5;
+let rhoBackground = 0.001;
+let backgroundThreshold = 50;
 let backgroundImageMean = null;
 let backgroundImageVariance = null;
 
@@ -113,24 +115,71 @@ function populateMenu(data){
 	//background capture
 	menu.append('div')
 		.attr('class','buttonDiv')
-		.attr('id','trainingButton')
+		.attr('id','backgroundCaptureButton')
 		.style('width',menuWidth-40 + 'px')
 		.style('margin','10px')
 		.style('padding','2px')
 		.style('height','20px')
 		.style('font-size','16px')
-		.text('Reset Background Image')
-		.on('mousedown', function(e){
-			var w = video.width;
-			var h = video.height;
-			backgroundImageMean = new Array(w*h);
-			backgroundImageVariance = new Array(w*h);
-			captureBackground = true;
-			d3.select('canvas').classed('redBordered', true)
+		.text('Capture Background Image')
+		.on('click', function(e){
+			if (!captureBackground){
+				var w = video.width;
+				var h = video.height;
+				backgroundImageMean = new Array(w*h);
+				backgroundImageVariance = new Array(w*h);
+				captureBackground = true;
+				useBackground = true
+				iBackground = 0;
+				d3.select('canvas').classed('redBordered',true)
+			} else {
+				captureBackground = false;
+				d3.select('canvas').classed('redBordered',false)	
+			}
+			d3.select('#backgroundCaptureButton').classed('buttonDivActive', captureBackground)
 		})
-		.on('mouseup', function(e){
-			//captureBackground = false;
-			d3.select('canvas').classed('redBordered', false)
+
+
+	// //background reset
+	// menu.append('div')
+	// 	.attr('class','buttonDiv')
+	// 	.attr('id','backgroundCaptureButton')
+	// 	.style('width',menuWidth-40 + 'px')
+	// 	.style('margin','10px')
+	// 	.style('padding','2px')
+	// 	.style('height','20px')
+	// 	.style('font-size','16px')
+	// 	.text('Reset Background Image')
+	// 	.on('click', function(e){
+	// 		var w = video.width;
+	// 		var h = video.height;
+	// 		backgroundImageMean = new Array(w*h);
+	// 		backgroundImageVariance = new Array(w*h);
+	// 		captureBackground = true;
+	// 		useBackground = true
+	// 		iBackground = 0;
+	// 	})
+
+	//background capture
+	menu.append('div')
+		.attr('class','buttonDiv')
+		.attr('id','backgroundOnOffButton')
+		.style('width',menuWidth-40 + 'px')
+		.style('margin','10px')
+		.style('padding','2px')
+		.style('height','20px')
+		.style('font-size','16px')
+		.text('Turn Background Subtraction Off')
+		.on('click', function(e){
+			useBackground = !useBackground;
+			var elem = d3.select('#backgroundOnOffButton');
+			//elem.classed('buttonDivActive', !useBackground)
+			if (useBackground){
+				elem.text('Turn Background Subtraction Off')
+			} else {
+				elem.text('Turn Background Subtraction On')
+			}
+
 		})
 
 }
@@ -729,6 +778,7 @@ function setup(){
 	var h = video.height;
 	backgroundImageMean = new Array(w*h);
 	backgroundImageVariance = new Array(w*h);
+	d3.select('canvas').classed('redBordered',true)
 
 	initializeML();
 	loadSavedModel();
@@ -739,7 +789,7 @@ function draw() {
 
 
 
-	if (readyModel && readyVideo && doClassify){
+	if (readyModel && readyVideo && doClassify && !initialCapture){//} && !captureBackground){
 		classify();
 	} 
 
@@ -747,11 +797,23 @@ function draw() {
 	//for background subtraction
 	if (readyVideo){
 		video.loadPixels();
-		if (captureBackground){
+		if (captureBackground){ //if we don't constantly do this, then any fluctuations in the exposure time of the webcam (which I can't control) changes the subtraction, but if we do constantly do this, we can't hold an object in the same place!
 			setBackgroundImage(); //create the background image
 		}
-		if (backgroundImageMean != null) {
-			subtractBackgroundImage(); //my function below to set the pixels 
+		if (useBackground){
+			if (backgroundImageMean != null) {
+				subtractBackgroundImage(); //my function below to set the pixels 
+			}
+		}
+		if (initialCapture){
+			label = 'capturing background'
+			console.log(iBackground, nBackground);
+		}
+		if (captureBackground && initialCapture && iBackground > nBackground){ //initial background capture
+			captureBackground = false;
+			initialCapture = false;
+			d3.select('canvas').classed('redBordered',false)
+
 		}
 
 		video.updatePixels(); //p5js library
