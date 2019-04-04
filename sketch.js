@@ -25,6 +25,15 @@ let showingMenu = false;
 
 let confidenceLim = 0.9995; //limit before object is considered identified.
 
+//for background subtraction
+let captureBackground = true; //start with background subtraction
+let nBackground = 10;
+let iBackground = 0;
+let rhoBackground = 0.01;
+let backgroundThreshold = 5;
+let backgroundImageMean = null;
+let backgroundImageVariance = null;
+
 function populateMenu(data){
 	//https://www.w3schools.com/howto/howto_js_collapsible.asp
 	var menu = d3.select('#objectMenu')
@@ -99,6 +108,29 @@ function populateMenu(data){
 			doClassify = false;
 			showingTraining = true;
 			showingVideo = true;
+		})
+
+	//background capture
+	menu.append('div')
+		.attr('class','buttonDiv')
+		.attr('id','trainingButton')
+		.style('width',menuWidth-40 + 'px')
+		.style('margin','10px')
+		.style('padding','2px')
+		.style('height','20px')
+		.style('font-size','16px')
+		.text('Reset Background Image')
+		.on('mousedown', function(e){
+			var w = video.width;
+			var h = video.height;
+			backgroundImageMean = new Array(w*h);
+			backgroundImageVariance = new Array(w*h);
+			captureBackground = true;
+			d3.select('canvas').classed('redBordered', true)
+		})
+		.on('mouseup', function(e){
+			//captureBackground = false;
+			d3.select('canvas').classed('redBordered', false)
 		})
 
 }
@@ -683,12 +715,20 @@ function preload(){
 }
 
 function setup(){
-	createCanvas(vWidth, vHeight).parent(select('#videoDiv'));
+	canvas = createCanvas(vWidth, vHeight).parent(select('#videoDiv'));
+	pixelDensity(1);
+
 	d3.select('canvas').classed('bordered', true);
 
 	video = createCapture(VIDEO);
 	video.hide();
+
 	background(0);
+
+	var w = video.width;
+	var h = video.height;
+	backgroundImageMean = new Array(w*h);
+	backgroundImageVariance = new Array(w*h);
 
 	initializeML();
 	loadSavedModel();
@@ -696,16 +736,84 @@ function setup(){
 
 function draw() {
 	background(0);
-	image(video, 0, 0, vWidth, vHeight);
-	fill('gray');
-	textSize(24);
-		text(label, 10, height - 10);
+
+
 
 	if (readyModel && readyVideo && doClassify){
 		classify();
 	} 
+
+
+	//for background subtraction
+	if (readyVideo){
+		video.loadPixels();
+		if (captureBackground){
+			setBackgroundImage(); //create the background image
+		}
+		if (backgroundImageMean != null) {
+			subtractBackgroundImage(); //my function below to set the pixels 
+		}
+
+		video.updatePixels(); //p5js library
+
+	}
+	image(video, 0, 0, vWidth, vHeight);// 
+	fill('gray');
+	textSize(24);
+	text(label, 10, height - 10);
+
 }
 
+//set the background image
+//https://en.wikipedia.org/wiki/Foreground_detection#Running_Gaussian_average
+function setBackgroundImage(){
+	var w = video.width;
+	var h = video.height;
+	//https://www.youtube.com/watch?v=nMUMZ5YRxHI
+	for (x=0; x<w; x++) {
+		for (y=0; y<h; y++) {
+			var index = (x + y*w)*4; 
+
+			for (k=0; k<4; k++) {
+				if (iBackground == 0){
+					backgroundImageMean[index + k] = pixels[index + k];
+					backgroundImageVariance[index + k] = 0.1;
+				} else {
+					var d = Math.abs(pixels[index + k] - backgroundImageMean[index + k])
+					backgroundImageMean[index + k] = rhoBackground*pixels[index + k] + (1. - rhoBackground)*backgroundImageMean[index + k]
+					backgroundImageVariance[index + k] = d*d*rhoBackground + (1. - rhoBackground)*backgroundImageVariance[index + k]
+				}
+			}
+			
+		}
+	}
+	iBackground += 1;
+
+}
+//subtract the background image
+function subtractBackgroundImage(){
+
+	var w = video.width;
+	var h = video.height;
+	var check;
+	for (x=0; x<w; x++) {
+		for (y=0; y<h; y++) {
+			var index = (x + y*w)*4; 
+			var check = 0;
+			for (k=0; k<3; k++) { //don't subtract the opacity! 
+				var d = Math.abs(pixels[index + k] - backgroundImageMean[index + k])
+				check += d*d/backgroundImageVariance[index + k];
+			}
+			//if (check > 0){console.log(x,y,check)}
+			if (check <= backgroundThreshold ){
+				for (k=0; k<4; k++) { 
+					pixels[index + k] = 0;
+				}
+			}
+		}
+	}
+
+}
 ///////////////////////////
 // runs on load
 ///////////////////////////
