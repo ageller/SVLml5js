@@ -25,16 +25,19 @@ let showingMenu = false;
 
 let confidenceLim = 0.9995; //limit before object is considered identified.
 
-//for background subtraction
+//for background subtraction (commented out testing section at bottom)
 let useBackground = true; //start with background subtraction
 let captureBackground = true; //start with background subtraction
 let initialCapture = true;
 let nBackground = 100;
 let iBackground = 0;
-let rhoBackground = 0.001;
-let backgroundThreshold = 50;
 let backgroundImageMean = null;
 let backgroundImageVariance = null;
+//need to tune these...
+let rhoBackground = 0.001; //for time average of mean and variance
+let backgroundChi2Threshold = 0; //chi2 values below this are considered background (variance seems better?)
+let backgroundVarianceThreshold = 25; //variance values below this are considered background
+
 
 function populateMenu(data){
 	//https://www.w3schools.com/howto/howto_js_collapsible.asp
@@ -303,25 +306,80 @@ function updateInfo(obj){
 	}
 }
 function flyWWT(url){
-	var popup = window.open(url,"WWT", "width=200,height=100");
-	setTimeout(function() {popup.close();}, 1000); //I want to make this fire onload, but it won't let me
-	//popup.blur(); //doesn't work
-	//window.focus();
+	//try with Ajax
+	var http = new XMLHttpRequest();
+	http.open("GET", url);
+	http.send();
+	http.onreadystatechange = function(){
+		if (this.readyState == 4 && this.status == 200){
+			console.log('finished flying to WWT location')
+		}
+	}
+
+	// var popup = window.open(url,"WWT", "width=200,height=100");
+	// setTimeout(function() {popup.close();}, 1000); //I want to make this fire onload, but it won't let me
+	// //popup.blur(); //doesn't work
+	// //window.focus();
 }
 function launchVLC3D(movie){
 	//testing for now
-	var popup = window.open("http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=pl_empty","VLC3D", "width=200,height=100");
-	setTimeout(function() {
-		popup.location.replace("http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=in_enqueue&input=/Users/svladler/AstroConversationMedia/Movies3D_TopBottom/Stars/Sun/EUVI_171_Angstroms-TB2.mov")},
-		200);
-	setTimeout(function() {
-		popup.location.replace("http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=pl_play")},
-		400);
-	setTimeout(function() {
-		popup.location.replace("http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=fullscreen")},
-		600);
-	//setTimeout(function() {popup.close();}, 1000); //I want to make this fire onload, but it won't let me
-	console.log("showing video")
+
+	//try with Ajax
+
+	//clear the playlist
+	var url1 = "http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=pl_empty";
+	
+	//add a movie to playlist
+	var url2 = "http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=in_enqueue&input=/Users/svladler/AstroConversationMedia/Movies3D_TopBottom/Stars/Sun/EUVI_171_Angstroms-TB2.mov";
+	
+	//play the playlist
+	var url3 = "http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=pl_play";
+	
+	//go to fullscreen
+	var url4 = "http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=fullscreen"
+	
+	var http1 = new XMLHttpRequest();
+	http1.open("GET", url1);
+	http1.send();
+	http1.onreadystatechange = function(){
+		if (this.readyState == 4 && this.status == 200){
+			var http2 = new XMLHttpRequest();
+			http2.open("GET", url2);
+			http2.send();
+			http2.onreadystatechange = function(){
+				if (this.readyState == 4 && this.status == 200){
+					var http3 = new XMLHttpRequest();
+					http3.open("GET", url3);
+					http3.send();
+					http3.onreadystatechange = function(){
+						if (this.readyState == 4 && this.status == 200){
+							var http4 = new XMLHttpRequest();
+							http4.open("GET", url4);
+							http4.send();
+							http4.onreadystatechange = function(){
+								if (this.readyState == 4 && this.status == 200){
+									console.log('playing VLC 3D movie')
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// var popup = window.open("http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=pl_empty","VLC3D", "width=200,height=100");
+	// setTimeout(function() {
+	// 	popup.location.replace("http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=in_enqueue&input=/Users/svladler/AstroConversationMedia/Movies3D_TopBottom/Stars/Sun/EUVI_171_Angstroms-TB2.mov")},
+	// 	200);
+	// setTimeout(function() {
+	// 	popup.location.replace("http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=pl_play")},
+	// 	400);
+	// setTimeout(function() {
+	// 	popup.location.replace("http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=fullscreen")},
+	// 	600);
+	// //setTimeout(function() {popup.close();}, 1000); //I want to make this fire onload, but it won't let me
+	// console.log("showing video")
 
 }
 function showCaption(cap){
@@ -441,7 +499,7 @@ function gotResults(err, results) {
 		console.error(err);
 	}
 	if (results && results[0]) {
-		console.log("err, results[0]", err, results[0])
+		//console.log("err, results[0]", err, results[0])
 		label = results[0].label;
 		confidence = results[0].confidence;
 		if (confidence > confidenceLim){
@@ -797,6 +855,7 @@ function draw() {
 	//for background subtraction
 	if (readyVideo){
 		video.loadPixels();
+		divideMean(); // my function to divide out the mean value, to try to remove fluctuations in exposure time
 		if (captureBackground){ //if we don't constantly do this, then any fluctuations in the exposure time of the webcam (which I can't control) changes the subtraction, but if we do constantly do this, we can't hold an object in the same place!
 			setBackgroundImage(); //create the background image
 		}
@@ -839,7 +898,7 @@ function setBackgroundImage(){
 			for (k=0; k<4; k++) {
 				if (iBackground == 0){
 					backgroundImageMean[index + k] = pixels[index + k];
-					backgroundImageVariance[index + k] = 0.1;
+					backgroundImageVariance[index + k] = 1.;
 				} else {
 					var d = Math.abs(pixels[index + k] - backgroundImageMean[index + k])
 					backgroundImageMean[index + k] = rhoBackground*pixels[index + k] + (1. - rhoBackground)*backgroundImageMean[index + k]
@@ -852,26 +911,64 @@ function setBackgroundImage(){
 	iBackground += 1;
 
 }
+//divide the image by the mean value
+function divideMean(){
+
+	var w = video.width;
+	var h = video.height;
+
+	var meanR = 0;
+	var meanG = 0;
+	var meanB = 0;
+	for (x=0; x<w; x++) {
+		for (y=0; y<h; y++) {
+			var index = (x + y*w)*4; 
+			meanR += pixels[index + 0];
+			meanG += pixels[index + 1];
+			meanB += pixels[index + 2];
+		}
+	}
+	meanR /= (w*h);
+	meanG /= (w*h);
+	meanB /= (w*h);
+	var norm = (meanR + meanG + meanB)/3.
+	//console.log('meanR,G,B', meanR, meanG, meanB, norm)
+	for (x=0; x<w; x++) {
+		for (y=0; y<h; y++) {
+			var index = (x + y*w)*4; 
+
+			pixels[index + 0] = pixels[index + 0]/meanR*norm;
+			pixels[index + 1] = pixels[index + 1]/meanG*norm;
+			pixels[index + 2] = pixels[index + 2]/meanB*norm;
+		}
+	}
+}
 //subtract the background image
 function subtractBackgroundImage(){
 
 	var w = video.width;
 	var h = video.height;
-	var check;
+
 	for (x=0; x<w; x++) {
 		for (y=0; y<h; y++) {
 			var index = (x + y*w)*4; 
-			var check = 0;
+			var chi2 = 0;
+			var variance = 0;
+			var mean = 0;
 			for (k=0; k<3; k++) { //don't subtract the opacity! 
 				var d = Math.abs(pixels[index + k] - backgroundImageMean[index + k])
-				check += d*d/backgroundImageVariance[index + k];
+				chi2 += d*d/backgroundImageVariance[index + k];
+				mean += d;
+				variance += d*d;
 			}
-			//if (check > 0){console.log(x,y,check)}
-			if (check <= backgroundThreshold ){
+			mean /= 3.;
+			variance = variance/3. - mean*mean;
+			//if (chi2 > 0){console.log(x,y,chi2)}
+			if (chi2 <= backgroundChi2Threshold || variance < backgroundVarianceThreshold){ //low variance is maybe just different exposure time?
 				for (k=0; k<4; k++) { 
 					pixels[index + k] = 0;
 				}
-			}
+			} 
 		}
 	}
 
@@ -894,5 +991,31 @@ d3.json('data/allObjects.json')
 		console.log(objData)
 		populateMenu(data)
 	});
+
+//testing the threshold values
+d3.select('#infoDiv').append('input')
+	.on('keypress', function(){
+		var key = d3.event.key;
+		if (key == 'q'){
+			rhoBackground += 0.001;
+		}
+		if (key == 'a'){
+			rhoBackground -= 0.001;
+		}
+		if (key == 'w'){
+			backgroundChi2Threshold += 1;
+		}
+		if (key == 's'){
+			backgroundChi2Threshold -= 1;
+		}
+		if (key == 'e'){
+			backgroundVarianceThreshold += 1;
+		}
+		if (key == 'd'){
+			backgroundVarianceThreshold -= 1;
+		}	
+		console.log(rhoBackground, backgroundChi2Threshold, backgroundVarianceThreshold)					
+
+	})
 
 
