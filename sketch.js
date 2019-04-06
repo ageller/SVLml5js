@@ -2,6 +2,7 @@ let objData = null;
 let classifier = null;
 let featureExtractor = null;
 let video;
+let videoShow;
 let label = 'loading model';
 let canvas;
 let readyVideo = false;
@@ -26,6 +27,7 @@ let showingMenu = false;
 let confidenceLim = 0.9995; //limit before object is considered identified.
 
 //for background subtraction (commented out testing section at bottom)
+let showBackgroundSubtractedVideo = false; //don't show the user the background subtracted video (unless they click the button)
 let useBackground = true; //start with background subtraction
 let captureBackground = true; //start with background subtraction
 let initialCapture = true;
@@ -124,22 +126,23 @@ function populateMenu(data){
 		.style('padding','2px')
 		.style('height','20px')
 		.style('font-size','16px')
-		.text('Capture Background Image')
+		.text('Click To Capture Background Image')
 		.on('click', function(e){
-			if (!captureBackground){
+			elem = d3.select('#backgroundCaptureButton');
+			captureBackground = !captureBackground;
+			d3.select('canvas').classed('redBordered',captureBackground)
+			elem.classed('buttonDivActive', captureBackground)
+			if (captureBackground){
 				var w = video.width;
 				var h = video.height;
 				backgroundImageMean = new Array(w*h);
 				backgroundImageVariance = new Array(w*h);
-				captureBackground = true;
 				useBackground = true
 				iBackground = 0;
-				d3.select('canvas').classed('redBordered',true)
+				elem.text('Capturing Background Image')
 			} else {
-				captureBackground = false;
-				d3.select('canvas').classed('redBordered',false)	
+				elem.text('Click To Capture Background Image')
 			}
-			d3.select('#backgroundCaptureButton').classed('buttonDivActive', captureBackground)
 		})
 
 
@@ -172,19 +175,40 @@ function populateMenu(data){
 		.style('padding','2px')
 		.style('height','20px')
 		.style('font-size','16px')
-		.text('Turn Background Subtraction Off')
+		.text('Background Subtraction On')
 		.on('click', function(e){
 			useBackground = !useBackground;
 			var elem = d3.select('#backgroundOnOffButton');
-			//elem.classed('buttonDivActive', !useBackground)
+			elem.classed('buttonDivActive', !useBackground)
 			if (useBackground){
-				elem.text('Turn Background Subtraction Off')
+				elem.text('Background Subtraction On')
 			} else {
-				elem.text('Turn Background Subtraction On')
+				elem.text('Background Subtraction Off')
 			}
 
 		})
 
+	//background capture
+	menu.append('div')
+		.attr('class','buttonDiv')
+		.attr('id','backgroundShowButton')
+		.style('width',menuWidth-40 + 'px')
+		.style('margin','10px')
+		.style('padding','2px')
+		.style('height','20px')
+		.style('font-size','16px')
+		.text('Hiding Background Subtracted Video')
+		.on('click', function(e){
+			showBackgroundSubtractedVideo = !showBackgroundSubtractedVideo;
+			var elem = d3.select('#backgroundShowButton');
+			elem.classed('buttonDivActive', showBackgroundSubtractedVideo)
+			if (showBackgroundSubtractedVideo){
+				elem.text('Showing Background Subtracted Video')
+			} else {
+				elem.text('Hiding Background Subtracted Video')
+			}
+
+		})
 }
 
 function showHideMenu(x){
@@ -499,7 +523,7 @@ function gotResults(err, results) {
 		console.error(err);
 	}
 	if (results && results[0]) {
-		//console.log("err, results[0]", err, results[0])
+		console.log("err, results[0]", err, results[0])
 		label = results[0].label;
 		confidence = results[0].confidence;
 		if (confidence > confidenceLim){
@@ -829,6 +853,8 @@ function setup(){
 
 	video = createCapture(VIDEO);
 	video.hide();
+	videoShow = createCapture(VIDEO);
+	videoShow.hide();
 
 	background(0);
 
@@ -878,7 +904,11 @@ function draw() {
 		video.updatePixels(); //p5js library
 
 	}
-	image(video, 0, 0, vWidth, vHeight);// 
+	if (showBackgroundSubtractedVideo){
+		image(video, 0, 0, vWidth, vHeight);// 
+	} else {
+		image(videoShow, 0, 0, vWidth, vHeight);// 
+	}
 	fill('gray');
 	textSize(24);
 	text(label, 10, height - 10);
@@ -992,30 +1022,30 @@ d3.json('data/allObjects.json')
 		populateMenu(data)
 	});
 
-//testing the threshold values
-d3.select('#infoDiv').append('input')
-	.on('keypress', function(){
-		var key = d3.event.key;
-		if (key == 'q'){
-			rhoBackground += 0.001;
-		}
-		if (key == 'a'){
-			rhoBackground -= 0.001;
-		}
-		if (key == 'w'){
-			backgroundChi2Threshold += 1;
-		}
-		if (key == 's'){
-			backgroundChi2Threshold -= 1;
-		}
-		if (key == 'e'){
-			backgroundVarianceThreshold += 1;
-		}
-		if (key == 'd'){
-			backgroundVarianceThreshold -= 1;
-		}	
-		console.log(rhoBackground, backgroundChi2Threshold, backgroundVarianceThreshold)					
+// //testing the threshold values
+// d3.select('#infoDiv').append('input')
+// 	.on('keypress', function(){
+// 		var key = d3.event.key;
+// 		if (key == 'q'){
+// 			rhoBackground += 0.001;
+// 		}
+// 		if (key == 'a'){
+// 			rhoBackground -= 0.001;
+// 		}
+// 		if (key == 'w'){
+// 			backgroundChi2Threshold += 1;
+// 		}
+// 		if (key == 's'){
+// 			backgroundChi2Threshold -= 1;
+// 		}
+// 		if (key == 'e'){
+// 			backgroundVarianceThreshold += 1;
+// 		}
+// 		if (key == 'd'){
+// 			backgroundVarianceThreshold -= 1;
+// 		}	
+// 		console.log(rhoBackground, backgroundChi2Threshold, backgroundVarianceThreshold)					
 
-	})
+// 	})
 
 
