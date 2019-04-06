@@ -107,7 +107,7 @@ function populateMenu(data){
 		.style('padding','2px')
 		.style('height','20px')
 		.style('font-size','16px')
-		.text('Click To Update Model Training')
+		.text('Update Model Training')
 		.on('click', function(e){
 			showingTraining = !showingTraining;
 			doClassify = !showingTraining;
@@ -120,7 +120,7 @@ function populateMenu(data){
 				showingVideo = true;
 				elem.text('Updating Model Training')
 			} else {
-				elem.text('Click To Update Model Training')
+				elem.text('Update Model Training')
 
 			} 
 		})
@@ -134,7 +134,7 @@ function populateMenu(data){
 		.style('padding','2px')
 		.style('height','20px')
 		.style('font-size','16px')
-		.text('Click To Capture Background Image')
+		.text('Capture Background Image')
 		.on('click', function(e){
 			elem = d3.select('#backgroundCaptureButton');
 			captureBackground = !captureBackground;
@@ -149,7 +149,7 @@ function populateMenu(data){
 				iBackground = 0;
 				elem.text('Capturing Background Image')
 			} else {
-				elem.text('Click To Capture Background Image')
+				elem.text('Capture Background Image')
 			}
 		})
 
@@ -183,13 +183,13 @@ function populateMenu(data){
 		.style('padding','2px')
 		.style('height','20px')
 		.style('font-size','16px')
-		.text('Click To Turn Off Background Subtraction')
+		.text('Turn Off Background Subtraction')
 		.on('click', function(e){
 			useBackground = !useBackground;
 			var elem = d3.select('#backgroundOnOffButton');
 			elem.classed('buttonDivActive', !useBackground)
 			if (useBackground){
-				elem.text('Click To Turn Off Background Subtraction')
+				elem.text('Turn Off Background Subtraction')
 			} else {
 				elem.text('Background Subtraction Off')
 			}
@@ -205,7 +205,7 @@ function populateMenu(data){
 		.style('padding','2px')
 		.style('height','20px')
 		.style('font-size','16px')
-		.text('Click to Show Background Subtracted Video')
+		.text('Show Background Subtracted Video')
 		.on('click', function(e){
 			showBackgroundSubtractedVideo = !showBackgroundSubtractedVideo;
 			var elem = d3.select('#backgroundShowButton');
@@ -213,7 +213,7 @@ function populateMenu(data){
 			if (showBackgroundSubtractedVideo){
 				elem.text('Showing Background Subtracted Video')
 			} else {
-				elem.text('Click to Show Background Subtracted Video')
+				elem.text('Show Background Subtracted Video')
 			}
 
 		})
