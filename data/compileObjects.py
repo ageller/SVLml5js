@@ -48,38 +48,39 @@ def getData(loc):
 
 # In[3]:
 
+def compileAll():
 
-loc1 = os.path.join('TileWallData','objectFiles')
-loc2 = 'userObjects'
-objects, categories = getData([loc1, loc2])
-
-
-# ### Identify the unique categories, and create the new dataframe
-
-# In[12]:
+    loc1 = os.path.join('TileWallData','objectFiles')
+    loc2 = 'userObjects'
+    objects, categories = getData([loc1, loc2])
 
 
-categories = sorted(list(set(categories)), key=str.lower)
-print(categories)
-dictOut = {}
-for c in categories:
-    dictOut[c] = []
+    # ### Identify the unique categories, and create the new dataframe
+
+    # In[12]:
 
 
-# In[5]:
+    categories = sorted(list(set(categories)), key=str.lower)
+    print(categories)
+    dictOut = {}
+    for c in categories:
+        dictOut[c] = []
 
 
-for key, o in objects.items():
-    dictOut[o['Category']].append({key:o})
-#print(dictOut)
+    # In[5]:
 
 
-# ### Dump this to json
+    for key, o in objects.items():
+        dictOut[o['Category']].append({key:o})
+    #print(dictOut)
 
-# In[6]:
+
+    # ### Dump this to json
+
+    # In[6]:
 
 
-with open('allObjects.json', 'w') as fp:
-    json.dump(dictOut, fp)
+    with open('allObjects.json', 'w') as fp:
+        json.dump(dictOut, fp)
 
 
