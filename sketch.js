@@ -24,7 +24,7 @@ let showingVideo = true;
 let showingTraining = false;
 let showingMenu = false;
 
-let confidenceLim = 0.9995; //limit before object is considered identified.
+let confidenceLim = 0.99; //limit before object is considered identified.
 
 //for background subtraction (commented out testing section at bottom)
 let showBackgroundSubtractedVideo = false; //don't show the user the background subtracted video (unless they click the button)
@@ -36,7 +36,7 @@ let iBackground = 0;
 let backgroundImageMean = null;
 let backgroundImageVariance = null;
 //need to tune these...
-let rhoBackground = 0.001; //for time average of mean and variance
+let rhoBackground = 0.01; //for time average of mean and variance
 let backgroundChi2Threshold = 0; //chi2 values below this are considered background (variance seems better?)
 let backgroundVarianceThreshold = 25; //variance values below this are considered background
 
@@ -109,6 +109,7 @@ function populateMenu(data){
 		.style('font-size','16px')
 		.text('Update Model Training')
 		.on('click', function(e){
+			resetInfo()
 			showingTraining = !showingTraining;
 			doClassify = !showingTraining;
 			elem = d3.select('#trainingButton')
@@ -116,12 +117,11 @@ function populateMenu(data){
 			d3.select('#infoDiv').classed('hidden',showingTraining)
 			d3.select('#trainingDiv').classed('hidden',!showingTraining)
 			if (showingTraining){
-				resetInfo();
+				label = 'training'
 				showingVideo = true;
 				elem.text('Updating Model Training')
 			} else {
 				elem.text('Update Model Training')
-
 			} 
 		})
 
@@ -641,6 +641,8 @@ function populateTrainingDiv(){
 			doClassify = true;
 			d3.select('#infoDiv').classed('hidden',false)
 			d3.select('#trainingDiv').classed('hidden',true)
+			d3.select('#trainingButton').classed('buttonDivActive', false);
+
 			showingTraining = false;
 		})
 
@@ -651,22 +653,27 @@ function updateTraining(obj){
 	d3.select('#trainingObject').text(id).classed('highlighted', true);
 	d3.select('#trainingNumber').text(classifier.mapStringToIndex.length).classed('highlighted', true);
 
-	var mouseUp = true;
+	var recording = false;
 	var record;
 	d3.select('#addObject')
-		.on('mousedown', function(e){
-			mouseUp = false;
-			record = setInterval(function(){ 
-				console.log(id)
-				classifier.addImage(id);
-				if (mouseUp){
-					d3.select('#trainingNumber').text(classifier.mapStringToIndex.length);
-					clearInterval(record);
-				}
-			}, trainingDelay);
-		})
-		.on('mouseup', function(e){
-			mouseUp = true;
+		.on('click', function(e){
+			recording = !recording
+			if (recording){
+				record = setInterval(function(){
+					d3.select('#addObject').text("Recording")
+					d3.select('#addObject').classed('buttonDivActive', true);
+					console.log(id)
+					classifier.addImage(id);
+					if (!recording){
+						d3.select('#trainingNumber').text(classifier.mapStringToIndex.length);
+						clearInterval(record);
+					}
+				}, trainingDelay);
+			} else {
+				d3.select('#addObject').text("Record")
+				d3.select('#addObject').classed('buttonDivActive', false);
+				clearInterval(record);
+			}
 		})
 }
 
@@ -1021,6 +1028,12 @@ d3.select('#resetButton').on('click',function(e){
 })
 d3.select('#showMenuButton').on('click',function(e){
 	showHideMenu(this);
+})
+d3.select('#videoDiv').on('click',function(e){
+	//var doClassifySave = doClassify;
+	resetInfo();
+	//doClassify = doClassifySave;
+
 })
 //read in the data
 d3.json('data/allObjects.json')
