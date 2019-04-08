@@ -23,6 +23,7 @@ let imgI = 0;
 let showingVideo = true;
 let showingTraining = false;
 let showingMenu = false;
+let resultsReady = true;
 
 let confidenceLim = 0.99; //limit before object is considered identified.
 
@@ -484,17 +485,18 @@ function initializeML(numClasses=null){
 	}
 	// Initialize the Image Classifier method with MobileNet and the video as the second argument
 	classifier = featureExtractor.classification(video, videoReady);
+	classifier.numClasses = numClasses;
 	//classifier = featureExtractor.regression(video, videoReady);
 	//classifier = ml5.imageClassifier('MobileNet', video, videoReady);  
-
 
 }
 
 function modelReady(){
 	console.log('Base Model (MobileNet) Loaded!');
-	d3.select('#trainingNumber').text(classifier.mapStringToIndex.length).classed('highlighted', true);
 	label = '';
 	readyModel = true;
+	resetTrainingText("Model Loaded")
+
 }
 
 
@@ -503,32 +505,72 @@ function videoReady() {
 	readyVideo = true;
 }
 
+function resetTrainingText(status="--"){
+	d3.select('#trainingNumber').text("--");
+	if (classifier != null){
+		if (classifier.hasOwnProperty('mapStringToIndex')){
+			d3.select('#trainingNumber').text(classifier.mapStringToIndex.length).classed('highlighted', true);
+		} 
+	}
+	d3.select('#trainingObject').text("[select from menu on right]");
+	d3.select('#trainingStatus').text(status);
+}
 function loadSavedModel(){
+	resetTrainingText("Loading Saved Model...");
 	classifier.load('./model/model.json', function() {
 		console.log('Custom Model Loaded!');
+		console.log(classifier)
+		featureExtractor.numClasses = numObjects;
+		console.log("Number of classes", featureExtractor.numClasses);
+		resetTrainingText("Model Loaded");
+
+		
+
 	});
-	console.log(classifier)
-	console.log(classifier.numClasses);
 
 }
 // Get a prediction for the current video frame
 function classify() {
 	classifier.classify(function(err, results){
-		gotResults(err, results)
+		if (resultsReady){
+			gotResults(err, results)
+		}
 	}); 
 	// classifier.predict(gotResults)
 }
 
+function findObject(label){
+	//identify the object based on the name
+	var foundObject = null;
+
+	for (var key in objData) {
+		objData[key].resultsReady = 0;
+		objData[key].forEach(function(d,i){
+			if (Object.keys(d)[0] == label){
+				console.log(label, Object.keys(d)[0], objData[key][i], d)
+				foundObject = d
+			}
+		})
+	}
+
+	return foundObject;
+
+}
 
 // Show the results
 function gotResults(err, results) {
 
+
+
+	resultsReady = false;
+	foundObject = null;
 	//need something in here to check if the result is finalized
 	//then I will update the infoDiv
 
 	// Display any error
 	if (err) {
 		console.error(err);
+		resultsReady = true;
 	}
 	if (results && results[0]) {
 		console.log("err, results[0]", err, results[0])
@@ -537,20 +579,21 @@ function gotResults(err, results) {
 		if (confidence > confidenceLim){
 			if (label == "Blank"){
 				doClassify = true;
+				resultsReady = true;
 			} else {
 				console.log("have result", label)
-			//identify the object based on the name
-				for (var key in objData) {
-					objData[key].forEach(function(d,i){
-						if (Object.keys(d)[0] == label){
-							console.log(label, Object.keys(d)[0], objData[key][i], d)
-							doClassify = false;
-							updateInfo(d);
-						}
-					})
-				}
+				console.log(results)
+				foundObject = findObject(label);
 			}
+		} else {
+			resultsReady = true;
 		}
+	}
+
+	if (foundObject != null){
+		resultsReady = true;
+		doClassify = false;
+		updateInfo(foundObject);	
 	}
 }
 
@@ -574,6 +617,7 @@ function populateTrainingDiv(){
 			featureExtractor = null;
 			classifier = null;
 			doClassify = false;
+			resetTrainingText("Loading Empty Model ...");
 			initializeML(numClasses = numObjects);
 		})
 
@@ -588,7 +632,7 @@ function populateTrainingDiv(){
 		.attr('class','training trainingText')
 		.style('margin-top','30px')
 		.style('width',useiWidth - 10 + 'px')
-		.text("Training Status : ")
+		.text("Status : ")
 		.append('span')
 			.attr('id','trainingStatus')
 			.classed('highlighted', false)
@@ -672,6 +716,7 @@ function updateTraining(obj){
 			} else {
 				d3.select('#addObject').text("Record")
 				d3.select('#addObject').classed('buttonDivActive', false);
+				d3.select('#trainingNumber').text(classifier.mapStringToIndex.length).classed('highlighted', true);
 				clearInterval(record);
 			}
 		})
@@ -682,9 +727,9 @@ function whileTraining(lossValue) {
 	console.log("loss",lossValue)
 	if (lossValue) {
 		loss = lossValue;
-		d3.select('#trainingStatus').text('Loss: ' + loss);
+		d3.select('#trainingStatus').text('Training... Loss = ' + loss);
 	} else {
-		d3.select('#trainingStatus').text('Done Training! Final Loss: ' + loss);
+		d3.select('#trainingStatus').text('Done Training! Final Loss = ' + loss);
 	}
 }
 
