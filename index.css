@@ -161,3 +161,9 @@ body {
 	margin: -8px;
 
 }
+#objectMenu{
+	background-color: var(--background-color);
+}
+#videoDiv{
+	background-color: black;
+}

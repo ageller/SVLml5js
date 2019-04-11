@@ -24,6 +24,7 @@ let showingVideo = true;
 let showingTraining = false;
 let showingMenu = false;
 let resultsReady = true;
+let fullscreen = false;
 
 let confidenceLim = 0.99; //limit before object is considered identified.
 
@@ -110,7 +111,7 @@ function populateMenu(data){
 		.style('font-size','16px')
 		.text('Update Model Training')
 		.on('click', function(e){
-			resetInfo()
+			resetInfo();
 			showingTraining = !showingTraining;
 			doClassify = !showingTraining;
 			elem = d3.select('#trainingButton')
@@ -238,14 +239,44 @@ function showHideMenu(x){
 
 }
 
-function resetInfo(){
-	shrink = 1.0;
-	d3.select('canvas').transition(tTrans)
-		.style('width',vWidth*shrink+'px')
-		.style('height',vHeight*shrink+'px');
+function resetCanvas(){
+
+	var w = vWidth;
+	var h = vHeight;
+	if (w/h != aspect){
+		w = h/aspect;
+	}
+
+	//videoDiv
 	d3.select('#videoDiv').transition(tTrans)
 		.style('width',vWidth*shrink+'px')
 		.style('height',vHeight*shrink+'px');
+
+	//canvas
+	var cvs = d3.select('canvas');
+	if (cvs.node() != null){
+
+		resizeCanvas(w, h);
+		cvs.transition(tTrans)
+			.style('width',w*shrink+'px')
+			.style('height',h*shrink+'px');
+
+		var left = 0;
+		if (fullscreen && w < vWidth) {
+			left = (vWidth - w)/2.;
+		}
+		cvs.style('margin-left', left*shrink+'px')
+			.attr('width',(w+left))
+			.attr('height',h)
+			.classed('bordered', !fullscreen);
+
+		console.log("aspect", parseFloat(cvs.style('height'))/parseFloat(cvs.style('width')), aspect, cvs.style('height'), window.innerHeight)
+	}
+}
+function resetInfo(){
+	console.log("resetInfo")
+	shrink = 1.0;
+	resetCanvas();
 
 	var iDiv = d3.select('#infoDiv')
 	iDiv.select('#objectName').html('')
@@ -255,7 +286,7 @@ function resetInfo(){
 	iDiv.select('#wikipedia').selectAll('span').remove()
 	iDiv.select('#wikipedia').selectAll('a').remove()
 
-	d3.select('#imageDiv').select('img').html('')
+	d3.select('#imageDiv').selectAll('img').html('') //is this not working?
 	d3.select('#imageCaption').html('')
 
 	doClassify = true;
@@ -268,12 +299,7 @@ function updateInfo(obj){
 	imgI = 0;
 	showingVideo = false;
 	shrink = 0.2
-	d3.select('canvas').transition(tTrans)
-		.style('width',vWidth*shrink+'px')
-		.style('height',vHeight*shrink+'px');
-	d3.select('#videoDiv').transition(tTrans)
-		.style('width',vWidth*shrink+'px')
-		.style('height',vHeight*shrink+'px');
+	resetCanvas();
 
 	var iDiv = d3.select('#infoDiv')
 
@@ -450,9 +476,10 @@ function showImage(images, captions, i){
 	h -= hc;
 
 
-	d3.select('#imageDiv').append('a')
-		.attr('href',img)
-		.attr('target','_blank')
+	d3.select('#imageDiv')
+		// .append('a')
+		// .attr('href',img)
+		// .attr('target','_blank')
 		.append('img')
 			.attr('src',img) 
 			.attr('width',w + 'px')
@@ -573,7 +600,7 @@ function gotResults(err, results) {
 		resultsReady = true;
 	}
 	if (results && results[0]) {
-		console.log("err, results[0]", err, results[0])
+		//console.log("err, results[0]", err, results[0])
 		label = results[0].label;
 		confidence = results[0].confidence;
 		if (confidence > confidenceLim){
@@ -753,12 +780,16 @@ function preload(){
 		vHeight = vWidth*aspect;
 	}
 
-	var cvs = d3.select('canvas');
-	if (cvs != null){
-		resizeCanvas(vWidth, vHeight);
-		cvs.style('width',vWidth*shrink+'px')
-			.style('height',vHeight*shrink+'px');
+
+	if (fullscreen){
+		vHeight = parseFloat(window.innerHeight);
+		vWidth = parseFloat(window.innerWidth);
+		m = 0;
+		b = 0;
+		frac = 1;
 	}
+
+
 
 
 	d3.select('#videoDiv')
@@ -770,6 +801,8 @@ function preload(){
 		.style('width',vWidth*shrink + 'px')
 		.style('height',vHeight*shrink + 'px')	
 		.style('z-index',4)
+
+	resetCanvas();
 
 	d3.select('#imageDiv')
 		.style('position','absolute')
@@ -810,6 +843,12 @@ function preload(){
 		useiWidth -= menuWidth
 	} else {
 		menuLeft = parseFloat(window.innerWidth);
+	}
+
+	if (fullscreen){
+		iWidth = parseFloat(window.innerWidth);
+		iHeight = parseFloat(window.innerHeight)
+		useiWidth = iWidth
 	}
 
 	d3.select('#infoDiv')
@@ -905,11 +944,18 @@ function preload(){
 	populateTrainingDiv()
 }
 
+
 function setup(){
-	canvas = createCanvas(vWidth, vHeight).parent(select('#videoDiv'));
+	var w = vWidth;
+	var h = vHeight;
+	if (w/h != aspect){
+		w = h/aspect;
+	}
+
+	canvas = createCanvas(w, h).parent(select('#videoDiv'));
 	pixelDensity(1);
 
-	d3.select('canvas').classed('bordered', true);
+	d3.select('canvas').classed('bordered', !fullscreen);
 
 	video = createCapture(VIDEO);
 	video.hide();
@@ -1080,6 +1126,14 @@ d3.select('#videoDiv').on('click',function(e){
 	//doClassify = doClassifySave;
 
 })
+//bind fullscreen to space bar
+document.body.onkeyup = function(e){
+    if(e.keyCode == 32){
+    	fullscreen = !fullscreen
+        console.log("fullscreen", fullscreen)
+        preload();
+    }
+}
 //read in the data
 d3.json('data/allObjects.json')
 	.then(function(data) {
