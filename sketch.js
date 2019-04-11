@@ -42,6 +42,9 @@ let rhoBackground = 0.01; //for time average of mean and variance
 let backgroundChi2Threshold = 0; //chi2 values below this are considered background (variance seems better?)
 let backgroundVarianceThreshold = 25; //variance values below this are considered background
 
+let yLine = 0;
+let lineSize = 1;
+let lineSpeed = 10;
 
 function populateMenu(data){
 	//https://www.w3schools.com/howto/howto_js_collapsible.asp
@@ -266,8 +269,8 @@ function resetCanvas(){
 			left = (vWidth - w)/2.;
 		}
 		cvs.style('margin-left', left*shrink+'px')
-			.attr('width',(w+left))
-			.attr('height',h)
+			.attr('width',vWidth)
+			.attr('height',vHeight)
 			.classed('bordered', !fullscreen);
 
 		console.log("aspect", parseFloat(cvs.style('height'))/parseFloat(cvs.style('width')), aspect, cvs.style('height'), window.innerHeight)
@@ -767,6 +770,7 @@ function whileTraining(lossValue) {
 // set all the sizes
 function preload(){
 	console.log('resizing...', showingVideo, showingTraining)
+	yLine = 0;
 
 	var m = 10; //margin
 	var b = 50; //button height
@@ -1009,6 +1013,8 @@ function draw() {
 
 		video.updatePixels(); //p5js library
 
+
+
 	}
 	if (showBackgroundSubtractedVideo){
 		image(video, 0, 0, vWidth, vHeight);// 
@@ -1017,10 +1023,30 @@ function draw() {
 	}
 	fill('gray');
 	textSize(24);
-	text(label, 10, height - 10);
+	stroke('gray');
+	strokeWeight(1);
+	text(label, 10, vHeight - 10);
+
+
+	if (videoReady){
+		drawLines();
+	}
 
 }
+function drawLines(N=150){
 
+	//line as if scanning (for fun)
+	strokeWeight(Math.abs(lineSize));
+	for (var i=0; i<N; i++){
+		stroke(0, 255, 0, 255*(1. - i/(N-1)));
+		var y = yLine - Math.sign(lineSpeed)*i*lineSize;
+		line(0,  y, vWidth, y);
+	}
+	if (yLine > vHeight || yLine < 0) {
+		lineSpeed *= -1;
+	}
+	yLine += lineSpeed;
+}
 //set the background image
 //https://en.wikipedia.org/wiki/Foreground_detection#Running_Gaussian_average
 function setBackgroundImage(){
