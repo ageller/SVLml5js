@@ -238,14 +238,7 @@ function resetCanvas(){
 		pixelDensity(1);
 		cvs = d3.select('canvas');
 		cvs.classed('bordered', !fullscreen);
-	} else {
-		resizeCanvas(w*shrink, h*shrink);
-	}
-
-
-	cvs.transition(tTrans)
-		.style('width',w*shrink+'px')
-		.style('height',h*shrink+'px');
+	} 
 
 	var left = 0;
 	if (fullscreen && w < parseFloat(window.innerWidth)) {
@@ -254,7 +247,13 @@ function resetCanvas(){
 	cvs.classed('bordered', !fullscreen)
 		.attr('width',vWidth)
 		.attr('height',vHeight)
-		
+	cvs.transition(tTrans)
+		.style('width',w*shrink+'px')
+		.style('height',h*shrink+'px');	
+
+
+
+
 	//videoDiv
 	d3.select('#videoWrapper').transition(tTrans)
 		.style('width',vOuterWidth*shrink+'px')
