@@ -4,7 +4,7 @@ let featureExtractor = null;
 let video;
 let videoShow;
 let label = 'loading model';
-let canvas;
+let canvas = null;
 let readyVideo = false;
 let readyModel = false;
 let doClassify = true;
@@ -12,6 +12,8 @@ let aspect = 9./12. //this is the  aspect (y/x) of my webcam
 let vWidth;
 let iWidth;
 let vHeight;
+let vOuterWidth;
+let vOuterHeight;
 let menuWidth;
 let menuLeft;
 let loss;
@@ -158,27 +160,6 @@ function populateMenu(data){
 			}
 		})
 
-
-	// //background reset
-	// menu.append('div')
-	// 	.attr('class','buttonDiv')
-	// 	.attr('id','backgroundCaptureButton')
-	// 	.style('width',menuWidth-40 + 'px')
-	// 	.style('margin','10px')
-	// 	.style('padding','2px')
-	// 	.style('height','20px')
-	// 	.style('font-size','16px')
-	// 	.text('Reset Background Image')
-	// 	.on('click', function(e){
-	// 		var w = video.width;
-	// 		var h = video.height;
-	// 		backgroundImageMean = new Array(w*h);
-	// 		backgroundImageVariance = new Array(w*h);
-	// 		captureBackground = true;
-	// 		useBackground = true
-	// 		iBackground = 0;
-	// 	})
-
 	//background capture
 	menu.append('div')
 		.attr('class','buttonDiv')
@@ -250,32 +231,43 @@ function resetCanvas(){
 		w = h/aspect;
 	}
 
-	//videoDiv
-	d3.select('#videoDiv').transition(tTrans)
-		.style('width',vWidth*shrink+'px')
-		.style('height',vHeight*shrink+'px');
-
 	//canvas
 	var cvs = d3.select('canvas');
-	if (cvs.node() != null){
-
-		resizeCanvas(w, h);
-		cvs.transition(tTrans)
-			.style('width',w*shrink+'px')
-			.style('height',h*shrink+'px');
-
-		var left = 0;
-		if (fullscreen && w < vWidth) {
-			left = (vWidth - w)/2.;
-		}
-		cvs.style('margin-left', left*shrink+'px')
-			.attr('width',vWidth)
-			.attr('height',vHeight)
-			.classed('bordered', !fullscreen);
-
-		console.log("aspect", parseFloat(cvs.style('height'))/parseFloat(cvs.style('width')), aspect, cvs.style('height'), window.innerHeight)
+	if (canvas == null){
+		canvas = createCanvas(w, h).parent(select('#videoDiv'));
+		pixelDensity(1);
+		cvs = d3.select('canvas');
+		cvs.classed('bordered', !fullscreen);
+	} else {
+		resizeCanvas(w*shrink, h*shrink);
 	}
+
+
+	cvs.transition(tTrans)
+		.style('width',w*shrink+'px')
+		.style('height',h*shrink+'px');
+
+	var left = 0;
+	if (fullscreen && w < parseFloat(window.innerWidth)) {
+		left = (parseFloat(window.innerWidth) - w)/2.;
+	}
+	cvs.classed('bordered', !fullscreen)
+		.attr('width',vWidth)
+		.attr('height',vHeight)
+		
+	//videoDiv
+	d3.select('#videoWrapper').transition(tTrans)
+		.style('width',vOuterWidth*shrink+'px')
+		.style('height',vOuterHeight*shrink+'px')
+	d3.select('#videoDiv').transition(tTrans)
+		.style('width',vWidth*shrink+'px')
+		.style('height',vHeight*shrink+'px')
+		.style('margin-left', left*shrink+'px')
+
+	console.log("aspect", parseFloat(cvs.style('height'))/parseFloat(cvs.style('width')), aspect, cvs.style('height'), window.innerHeight)
+
 }
+
 function resetInfo(){
 	console.log("resetInfo")
 	shrink = 1.0;
@@ -772,41 +764,68 @@ function preload(){
 	console.log('resizing...', showingVideo, showingTraining)
 	yLine = 0;
 
+
+	var frac = 0.6; //maximum fraction of screen width allowed for video/images
 	var m = 10; //margin
 	var b = 50; //button height
-	var frac = 0.6; //maximum fraction of screen width allowed for video/images
+	if (fullscreen){
+		m = 0;
+		b = 0;
+	}
 
 	//size this based on the screen
+	//video/image div
 	vHeight = parseFloat(window.innerHeight) - 3.*m - b;
 	vWidth = vHeight/aspect;
 	if (vWidth > frac*parseFloat(window.innerWidth)){ 
 		vWidth = frac*parseFloat(window.innerWidth);
 		vHeight = vWidth*aspect;
 	}
-
-
+	vOuterWidth = vWidth;
+	vOuterHeight = vHeight;
 	if (fullscreen){
-		vHeight = parseFloat(window.innerHeight);
-		vWidth = parseFloat(window.innerWidth);
-		m = 0;
-		b = 0;
-		frac = 1;
+		vOuterWidth = parseFloat(window.innerWidth);
+		vOuterHeight = parseFloat(window.innerHeight);
+	}
+	//info div
+	iWidth = parseFloat(window.innerWidth) - vWidth - 3.*m
+	var useiWidth = iWidth
+	if (showingMenu){
+		menuLeft = parseFloat(window.innerWidth) - menuWidth;
+		useiWidth -= menuWidth
+	} else {
+		menuLeft = parseFloat(window.innerWidth);
+	}
+	if (fullscreen){
+		iWidth = parseFloat(window.innerWidth);
+		iHeight = parseFloat(window.innerHeight)
+		useiWidth = iWidth
 	}
 
-
-
-
-	d3.select('#videoDiv')
+	d3.select('#videoWrapper')
 		.style('position','absolute')
 		.style('top',m + 'px')
 		.style('left',m +'px')
+		.style('padding',0)
+		.style('margin',0)
+		.style('width',vOuterWidth*shrink)
+		.style('height', vOuterHeight*shrink)
+		.style('background-color','black')
+		.style('z-index',3);
+
+	d3.select('#videoDiv')
+		.style('position','absolute')
+		.style('top',0)
+		.style('left',0)
 		.style('padding',0)
 		.style('margin',0)
 		.style('width',vWidth*shrink + 'px')
 		.style('height',vHeight*shrink + 'px')	
 		.style('z-index',4)
 
-	resetCanvas();
+	if (readyVideo){
+		resetCanvas();
+	}
 
 	d3.select('#imageDiv')
 		.style('position','absolute')
@@ -814,10 +833,10 @@ function preload(){
 		.style('left',m +'px')
 		.style('padding',0)
 		.style('margin',0)
-		.style('width',vWidth + 'px')
-		.style('height',vHeight + 'px')	
+		.style('width',vOuterWidth + 'px')
+		.style('height',vOuterHeight + 'px')	
 		.style('background-color','black')
-		// .style('z-index',-1)
+		.style('z-index',2)
 
 	var hc = 100;
 	var x = d3.select('#imageCaption');
@@ -829,31 +848,17 @@ function preload(){
 	}
 	d3.select('#imageCaption')
 		.style('position','absolute')
-		.style('top',vHeight-hc-2 + 'px') //for borders
+		.style('top',vOuterHeight-hc-2 + 'px') //for borders
 		.style('left',-2) //for borders
 		.style('padding','5px')
 		.style('margin',0)
-		.style('width',vWidth-10 + 'px')//for padding
+		.style('width',vOuterWidth-10 + 'px')//for padding
 		.style('max-height',100 + 'px')	
 		.style('background-color',getComputedStyle(document.documentElement).getPropertyValue('--background-color'))
 		.style('color',getComputedStyle(document.documentElement).getPropertyValue('--foreground-color'))
 		// .style('color','white')
 		// .style('z-index',-1)
 
-	iWidth = parseFloat(window.innerWidth) - vWidth - 3.*m
-	var useiWidth = iWidth
-	if (showingMenu){
-		menuLeft = parseFloat(window.innerWidth) - menuWidth;
-		useiWidth -= menuWidth
-	} else {
-		menuLeft = parseFloat(window.innerWidth);
-	}
-
-	if (fullscreen){
-		iWidth = parseFloat(window.innerWidth);
-		iHeight = parseFloat(window.innerHeight)
-		useiWidth = iWidth
-	}
 
 	d3.select('#infoDiv')
 		.style('position','absolute')
@@ -909,7 +914,7 @@ function preload(){
 			.text('>')
 			.classed('hidden',showingVideo);
 	}
-	x.style('top',vHeight/2 - 30 + 'px')
+	x.style('top',vOuterHeight/2 - 30 + 'px')
 
 	var x = d3.select('#imageDiv').select('#backwardImage');
 	if (x.node() == null){
@@ -924,7 +929,7 @@ function preload(){
 			.text('<')	
 			.classed('hidden',showingVideo);
 	}
-	x.style('top',vHeight/2 - 30 + 'px');
+	x.style('top',vOuterHeight/2 - 30 + 'px');
 
 	//resize image if necessary
 	var w = parseFloat(d3.select('#imageDiv').style('width'));
@@ -950,16 +955,8 @@ function preload(){
 
 
 function setup(){
-	var w = vWidth;
-	var h = vHeight;
-	if (w/h != aspect){
-		w = h/aspect;
-	}
 
-	canvas = createCanvas(w, h).parent(select('#videoDiv'));
-	pixelDensity(1);
-
-	d3.select('canvas').classed('bordered', !fullscreen);
+	resetCanvas();
 
 	video = createCapture(VIDEO);
 	video.hide();
@@ -983,7 +980,7 @@ function draw() {
 
 
 
-	if (readyModel && readyVideo && doClassify && !initialCapture){//} && !captureBackground){
+	if (readyModel && readyVideo && doClassify && !captureBackground){//&& !initialCapture){//} 
 		classify();
 	} 
 
@@ -1012,15 +1009,14 @@ function draw() {
 		}
 
 		video.updatePixels(); //p5js library
-
-
-
 	}
+
 	if (showBackgroundSubtractedVideo){
 		image(video, 0, 0, vWidth, vHeight);// 
 	} else {
 		image(videoShow, 0, 0, vWidth, vHeight);// 
 	}
+
 	fill('gray');
 	textSize(24);
 	stroke('gray');
@@ -1028,8 +1024,8 @@ function draw() {
 	text(label, 10, vHeight - 10);
 
 
-	if (videoReady){
-		drawLines();
+	if (videoReady && doClassify && !captureBackground){
+		//drawLines();
 	}
 
 }
@@ -1110,7 +1106,6 @@ function subtractBackgroundImage(){
 
 	var w = video.width;
 	var h = video.height;
-
 	for (x=0; x<w; x++) {
 		for (y=0; y<h; y++) {
 			var index = (x + y*w)*4; 
