@@ -240,6 +240,10 @@ function resetCanvas(){
 		cvs.classed('bordered', !fullscreen);
 	} 
 
+	if (canvas != null && readyVideo) { //this is needed for background subtraction, but breaks transitions!
+		resizeCanvas(w, h);
+	}
+
 	var left = 0;
 	if (fullscreen && w < parseFloat(window.innerWidth)) {
 		left = (parseFloat(window.innerWidth) - w)/2.;
