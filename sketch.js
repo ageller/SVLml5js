@@ -9,13 +9,32 @@ let readyVideo = false;
 let readyModel = false;
 let doClassify = true;
 let aspect = 9./12. //this is the  aspect (y/x) of my webcam 
-let vWidth;
-let iWidth;
-let vHeight;
-let vOuterWidth;
-let vOuterHeight;
+
+let videoWidth;
+let videoHeight;
+let videoOuterWidth;
+let videoOuterHeight;
+let imageWidth;
+let imageHeight;
+let infoWidth;
+let infoHeight;
 let menuWidth;
 let menuLeft;
+// let videoConstraints = {
+// 	video: {
+// 		deviceId: "e2d1e7a1022f08a4ab3131ad8b24696ed535c298c08925c16f964da208f352a9",
+// 		// width: { min: 1280 },
+// 		// height: { min: 720 },
+// 		// mandatory: {
+// 		// 	deviceId: "e2d1e7a1022f08a4ab3131ad8b24696ed535c298c08925c16f964da208f352a9",
+// 		// 	// width: { min: 1280 },
+// 		// 	// height: { min: 720 }
+// 		// },
+// 		// optional: [{ maxFrameRate: 10 }]
+// 	},
+// 	audio: false
+// };
+
 let loss;
 let shrink = 1.0; //fraction to shrink down the video when showing image (set to 0.2 below)
 let numObjects = 2;
@@ -26,7 +45,6 @@ let showingVideo = true;
 let showingTraining = false;
 let showingMenu = false;
 let resultsReady = true;
-let fullscreen = false;
 
 let confidenceLim = 0.99; //limit before object is considered identified.
 
@@ -116,7 +134,7 @@ function populateMenu(data){
 		.style('font-size','16px')
 		.text('Update Model Training')
 		.on('click', function(e){
-			resetInfo();
+			resetInfo(fullscreen = false);
 			showingTraining = !showingTraining;
 			doClassify = !showingTraining;
 			elem = d3.select('#trainingButton')
@@ -209,33 +227,49 @@ function showHideMenu(x){
 	showingMenu = !showingMenu;
 
 	x.classList.toggle("change");
-	var useiWidth = iWidth
+	var useinfoWidth = infoWidth
 	if (showingMenu){
 		menuLeft = parseFloat(window.innerWidth) - menuWidth;
-		useiWidth -= menuWidth
+		useinfoWidth -= menuWidth
 	} else {
 		menuLeft = parseFloat(window.innerWidth);
 	}
-	d3.select('#infoDiv').transition(tTrans).style('width',useiWidth + 'px')
-	d3.select('#trainingDiv').transition(tTrans).style('width',useiWidth + 'px')
-	d3.select('#trainingDiv').selectAll('.trainingText').transition(tTrans).style('width',useiWidth -10 + 'px')
+	d3.select('#infoDiv').transition(tTrans).style('width',useinfoWidth + 'px')
+	d3.select('#trainingDiv').transition(tTrans).style('width',useinfoWidth + 'px')
+	d3.select('#trainingDiv').selectAll('.trainingText').transition(tTrans).style('width',useinfoWidth -10 + 'px')
 	d3.select('#objectMenu').transition(tTrans).style('left',menuLeft + 'px');
 
 }
 
-function resetCanvas(){
+function resetCanvas(fullscreen = true){
 
-	var w = vWidth;
-	var h = vHeight;
-	if (w/h != aspect){
-		w = h/aspect;
+	var w = videoWidth;
+	var wOuter = videoOuterWidth;
+	var hClip = parseFloat(window.innerHeight);
+	var wOffset = 0;
+	if (!fullscreen){
+		w = imageWidth;
+		wOuter = w;
+		hClip = imageHeight;
+		wOffset = (videoOuterWidth - imageWidth)/2.
 	}
+
+	var vW = d3.select('#videoWrapper');
+	var vD = d3.select('#videoDiv');
+	//clip and center so that I can switch between full screen and not
+	w += wOffset;
+	wOuter += wOffset;
+	var h = w*aspect;
+	var hOuter = hOuter*aspect;
+
+	vW.style('clip', 'rect(0px,'+w*shrink+'px,'+hClip*shrink+'px,'+wOffset+'px)');
+	vW.style('transform', 'translate(-'+wOffset+'px,0px)');
 
 	//canvas
 	var cvs = d3.select('canvas');
 	if (canvas == null){
 		canvas = createCanvas(w, h).parent(select('#videoDiv'));
-		pixelDensity(1);
+		//pixelDensity(1);
 		cvs = d3.select('canvas');
 		cvs.classed('bordered', !fullscreen);
 	} 
@@ -249,32 +283,41 @@ function resetCanvas(){
 		left = (parseFloat(window.innerWidth) - w)/2.;
 	}
 	cvs.classed('bordered', !fullscreen)
-		.attr('width',vWidth)
-		.attr('height',vHeight)
+		.attr('width',w)
+		.attr('height',h)
 	cvs.transition(tTrans)
 		.style('width',w*shrink+'px')
 		.style('height',h*shrink+'px');	
 
 
-
-
 	//videoDiv
-	d3.select('#videoWrapper').transition(tTrans)
-		.style('width',vOuterWidth*shrink+'px')
-		.style('height',vOuterHeight*shrink+'px')
-	d3.select('#videoDiv').transition(tTrans)
-		.style('width',vWidth*shrink+'px')
-		.style('height',vHeight*shrink+'px')
+	vW.transition(tTrans)
+		.style('width',wOuter*shrink+'px')
+		.style('height',hOuter*shrink+'px')
+	vD.transition(tTrans)
+		.style('width',w*shrink+'px')
+		.style('height',h*shrink+'px')
 		.style('margin-left', left*shrink+'px')
 
-	console.log("aspect", parseFloat(cvs.style('height'))/parseFloat(cvs.style('width')), aspect, cvs.style('height'), window.innerHeight)
+
+	if (fullscreen && shrink == 1.){
+		vW.transition(tTrans)
+			.style('top','0px')
+			.style('left','0px');
+	} else {
+		vW.transition(tTrans)
+			.style('top','10px')
+			.style('left','10px');
+
+	}
+	// console.log("aspect", parseFloat(cvs.style('height'))/parseFloat(cvs.style('width')), aspect, cvs.style('height'), window.innerHeight)
 
 }
 
-function resetInfo(){
+function resetInfo(fullscreen = true){
 	console.log("resetInfo")
 	shrink = 1.0;
-	resetCanvas();
+	resetCanvas(fullscreen);
 
 	var iDiv = d3.select('#infoDiv')
 	iDiv.select('#objectName').html('')
@@ -471,7 +514,7 @@ function showImage(images, captions, i){
 	var h = parseFloat(d3.select('#imageDiv').style('height'));
 
 	var hc = showCaption(cap);
-	h -= hc;
+	//h -= hc;
 
 
 	d3.select('#imageDiv')
@@ -627,9 +670,9 @@ function gotResults(err, results) {
 ///////////////////////////
 function populateTrainingDiv(){
 
-	var useiWidth = iWidth
+	var useInfoWidth = infoWidth
 	if (showingMenu){
-		useiWidth -= menuWidth
+		useInfoWidth -= menuWidth
 	} 
 
 	d = d3.select('#trainingDiv');
@@ -656,7 +699,7 @@ function populateTrainingDiv(){
 	d.append('div')
 		.attr('class','training trainingText')
 		.style('margin-top','30px')
-		.style('width',useiWidth - 10 + 'px')
+		.style('width',useInfoWidth - 10 + 'px')
 		.text("Status : ")
 		.append('span')
 			.attr('id','trainingStatus')
@@ -665,7 +708,7 @@ function populateTrainingDiv(){
 
 	d.append('div')
 		.attr('class','training trainingText')
-		.style('width',useiWidth - 10 + 'px')
+		.style('width',useInfoWidth - 10 + 'px')
 		.text("Number of objects in training set : ")
 		.append('span')
 			.attr('id','trainingNumber')
@@ -675,7 +718,7 @@ function populateTrainingDiv(){
 
 	d.append('div')
 		.attr('class','training trainingText')
-		.style('width',useiWidth - 10 + 'px')
+		.style('width',useInfoWidth - 10 + 'px')
 		.text("Training model on : ")
 		.append('span')
 			.attr('id','trainingObject')
@@ -768,51 +811,42 @@ function preload(){
 	yLine = 0;
 
 
-	var frac = 0.6; //maximum fraction of screen width allowed for video/images
+	var frac = 0.5; //fraction of screen width allowed for video/images
 	var m = 10; //margin
 	var b = 50; //button height
-	if (fullscreen){
-		m = 0;
-		b = 0;
-	}
 
 	//size this based on the screen
 	//video/image div
-	vHeight = parseFloat(window.innerHeight) - 3.*m - b;
-	vWidth = vHeight/aspect;
-	if (vWidth > frac*parseFloat(window.innerWidth)){ 
-		vWidth = frac*parseFloat(window.innerWidth);
-		vHeight = vWidth*aspect;
-	}
-	vOuterWidth = vWidth;
-	vOuterHeight = vHeight;
-	if (fullscreen){
-		vOuterWidth = parseFloat(window.innerWidth);
-		vOuterHeight = parseFloat(window.innerHeight);
-	}
+	//videoHeight = parseFloat(window.innerHeight);
+	videoWidth = parseFloat(window.innerWidth);
+	videoHeight = videoWidth*aspect;
+	videoOuterWidth = videoWidth;
+	videoOuterHeight = videoHeight;
+
+	//image div
+	imageWidth = parseFloat(window.innerWidth)*frac - 2.*m;
+	imageHeight = parseFloat(window.innerHeight) - 3.*m - b;
 	//info div
-	iWidth = parseFloat(window.innerWidth) - vWidth - 3.*m
-	var useiWidth = iWidth
+	//infoWidth = parseFloat(window.innerWidth) - videoWidth - 3.*m
+	infoWidth = parseFloat(window.innerWidth) - imageWidth - 2.*m;
+	infoHeight = parseFloat(window.innerHeight) - 2.*m;
+	var useInfoWidth = infoWidth;
 	if (showingMenu){
 		menuLeft = parseFloat(window.innerWidth) - menuWidth;
-		useiWidth -= menuWidth
+		useInfoWidth -= menuWidth
 	} else {
 		menuLeft = parseFloat(window.innerWidth);
 	}
-	if (fullscreen){
-		iWidth = parseFloat(window.innerWidth);
-		iHeight = parseFloat(window.innerHeight)
-		useiWidth = iWidth
-	}
+
 
 	d3.select('#videoWrapper')
 		.style('position','absolute')
-		.style('top',m + 'px')
-		.style('left',m +'px')
+		.style('top',0)
+		.style('left',0)
 		.style('padding',0)
 		.style('margin',0)
-		.style('width',vOuterWidth*shrink)
-		.style('height', vOuterHeight*shrink)
+		.style('width',videoOuterWidth*shrink)
+		.style('height', videoOuterHeight*shrink)
 		.style('background-color','black')
 		.style('z-index',3);
 
@@ -822,8 +856,8 @@ function preload(){
 		.style('left',0)
 		.style('padding',0)
 		.style('margin',0)
-		.style('width',vWidth*shrink + 'px')
-		.style('height',vHeight*shrink + 'px')	
+		.style('width',videoWidth*shrink + 'px')
+		.style('height',videoHeight*shrink + 'px')	
 		.style('z-index',4)
 
 	if (readyVideo){
@@ -836,8 +870,8 @@ function preload(){
 		.style('left',m +'px')
 		.style('padding',0)
 		.style('margin',0)
-		.style('width',vOuterWidth + 'px')
-		.style('height',vOuterHeight + 'px')	
+		.style('width',imageWidth + 'px')
+		.style('height',imageHeight + 'px')	
 		.style('background-color','black')
 		.style('z-index',2)
 
@@ -851,26 +885,26 @@ function preload(){
 	}
 	d3.select('#imageCaption')
 		.style('position','absolute')
-		.style('top',vOuterHeight-hc-2 + 'px') //for borders
+		.style('top',imageHeight-hc-2 + 'px') //for borders
 		.style('left',-2) //for borders
 		.style('padding','5px')
 		.style('margin',0)
-		.style('width',vOuterWidth-10 + 'px')//for padding
+		.style('width',imageWidth-10 + 'px')//for padding
 		.style('max-height',100 + 'px')	
 		.style('background-color',getComputedStyle(document.documentElement).getPropertyValue('--background-color'))
 		.style('color',getComputedStyle(document.documentElement).getPropertyValue('--foreground-color'))
+		.style('z-index',3)
 		// .style('color','white')
-		// .style('z-index',-1)
 
 
 	d3.select('#infoDiv')
 		.style('position','absolute')
 		.style('top',m + 'px')
-		.style('left',(vWidth + 2.*m) +'px')
+		.style('left',(imageWidth + 2.*m) +'px')
 		.style('margin',0)
 		.style('padding',0)
-		.style('width',useiWidth + 'px')
-		.style('height',vHeight + b + m + 'px')
+		.style('width',useInfoWidth + 'px')
+		.style('height',infoHeight + 'px')
 
 	menuWidth = 0.25*parseFloat(window.innerWidth);
 	d3.select('#objectMenu')
@@ -884,21 +918,22 @@ function preload(){
 
 	d3.select('#resetButton')
 		.style('position','absolute')
-		.style('top',vHeight + 2.*m + 'px')
+		.style('top',imageHeight + 2.*m + 'px')
 		.style('left',m +'px')
 		.style('margin',0)
 		.style('padding',0)
-		.style('width',vWidth + 'px')
+		.style('width',imageWidth + 'px')
 		.style('height',b + 'px')
+		.style('z-index',2)
 
 	d3.select('#trainingDiv')
 		.style('position','absolute')
 		.style('top',m + 'px')
-		.style('left',(vWidth + 2.*m) +'px')
+		.style('left',(imageWidth + 2.*m) +'px')
 		.style('margin',0)
 		.style('padding',0)
-		.style('width',useiWidth + 'px')
-		.style('height',vHeight + b + m + 'px')
+		.style('width',useInfoWidth + 'px')
+		.style('height',infoHeight + 'px')
 		.classed('hidden',!showingTraining)
 
 
@@ -917,7 +952,7 @@ function preload(){
 			.text('>')
 			.classed('hidden',showingVideo);
 	}
-	x.style('top',vOuterHeight/2 - 30 + 'px')
+	x.style('top',imageHeight/2 - 30 + 'px')
 
 	var x = d3.select('#imageDiv').select('#backwardImage');
 	if (x.node() == null){
@@ -932,7 +967,7 @@ function preload(){
 			.text('<')	
 			.classed('hidden',showingVideo);
 	}
-	x.style('top',vOuterHeight/2 - 30 + 'px');
+	x.style('top',imageHeight/2 - 30 + 'px');
 
 	//resize image if necessary
 	var w = parseFloat(d3.select('#imageDiv').style('width'));
@@ -963,6 +998,9 @@ function setup(){
 
 	video = createCapture(VIDEO);
 	video.hide();
+	// videoShow = createCapture(videoConstraints, function(stream) {
+	// 	console.log(stream);
+	//  });
 	videoShow = createCapture(VIDEO);
 	videoShow.hide();
 
@@ -978,8 +1016,14 @@ function setup(){
 	loadSavedModel();
 }
 
+
+
 function draw() {
 	background(0);
+  // Flip the canvas so that we get a mirror image
+	translate(videoWidth, 0);
+  	scale(-1.0, 1.0);
+	//scale(-1.0,1.0);    // flip x-axis backwards
 
 
 
@@ -1015,16 +1059,20 @@ function draw() {
 	}
 
 	if (showBackgroundSubtractedVideo){
-		image(video, 0, 0, vWidth, vHeight);// 
+		image(video, 0, 0, videoWidth, videoHeight);// 
 	} else {
-		image(videoShow, 0, 0, vWidth, vHeight);// 
+		image(videoShow, 0, 0, videoWidth, videoHeight);// 
 	}
 
 	fill('gray');
 	textSize(24);
 	stroke('gray');
 	strokeWeight(1);
-	text(label, 10, vHeight - 10);
+	var h = Math.min(parseFloat(window.innerHeight), videoHeight)
+  	// Flip back for the text (but this doesn't work when not fullscreened because of clipping)
+	scale(-1.0, 1.0);	
+	translate(-videoWidth, 0);
+  	text(label, 10, h-10);
 
 
 	if (videoReady && doClassify && !captureBackground){
@@ -1039,9 +1087,9 @@ function drawLines(N=150){
 	for (var i=0; i<N; i++){
 		stroke(0, 255, 0, 255*(1. - i/(N-1)));
 		var y = yLine - Math.sign(lineSpeed)*i*lineSize;
-		line(0,  y, vWidth, y);
+		line(0,  y, videoWidth, y);
 	}
-	if (yLine > vHeight || yLine < 0) {
+	if (yLine > videoHeight || yLine < 0) {
 		lineSpeed *= -1;
 	}
 	yLine += lineSpeed;
@@ -1150,14 +1198,7 @@ d3.select('#videoDiv').on('click',function(e){
 	//doClassify = doClassifySave;
 
 })
-//bind fullscreen to space bar
-document.body.onkeyup = function(e){
-    if(e.keyCode == 32){
-    	fullscreen = !fullscreen
-        console.log("fullscreen", fullscreen)
-        preload();
-    }
-}
+
 //read in the data
 d3.json('data/allObjects.json')
 	.then(function(data) {
@@ -1165,6 +1206,19 @@ d3.json('data/allObjects.json')
 		console.log(objData)
 		populateMenu(data)
 	});
+
+//undo fullscreen with escape
+document.body.onkeyup = function(e){
+	if(e.keyCode == 27){
+		resetCanvas(false);
+	}
+}
+
+//processing for fullscreen
+// function mousePressed() {
+//     let fs = fullscreen();
+//     fullscreen(!fs);
+// }
 
 // //testing the threshold values
 // d3.select('#infoDiv').append('input')
@@ -1192,4 +1246,21 @@ d3.json('data/allObjects.json')
 
 // 	})
 
+//list available devices
+// if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+//   console.log("enumerateDevices() not supported.");
+// }
+
+// // List cameras and microphones.
+
+// navigator.mediaDevices.enumerateDevices()
+// .then(function(devices) {
+//   devices.forEach(function(device) {
+//     console.log(device.kind + ": " + device.label +
+//                 " id = " + device.deviceId);
+//   });
+// })
+// .catch(function(err) {
+//   console.log(err.name + ": " + err.message);
+// });
 
