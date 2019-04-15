@@ -62,7 +62,7 @@ body {
 	width:28px;
 	height:24px;
 	top:10px;
-	right:10px;
+	right:20px;
 	z-index:10;
 }
 .menuButton:hover{
@@ -162,6 +162,9 @@ body {
 
 }
 #objectMenu{
+	background-color: var(--background-color);
+}
+#infoDiv{
 	background-color: var(--background-color);
 }
 #videoDiv{

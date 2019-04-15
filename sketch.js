@@ -330,6 +330,7 @@ function resetInfo(fullscreen = true){
 	d3.select('#imageDiv').selectAll('img').html('') //is this not working?
 	d3.select('#imageCaption').html('')
 
+	d3.select('#infoDiv').classed('hidden',true)
 	doClassify = true;
 
 }
@@ -343,6 +344,7 @@ function updateInfo(obj){
 	resetCanvas();
 
 	var iDiv = d3.select('#infoDiv')
+	iDiv.classed('hidden',false)
 
 	id = Object.keys(obj)[0]
 	if (obj.hasOwnProperty(id)){
@@ -483,19 +485,10 @@ function launchVLC3D(movie){
 
 }
 function showCaption(cap){
-	var h = parseFloat(d3.select('#imageDiv').style('height'));
 	var x = d3.select('#imageCaption')
 	x.classed("hidden",false);
 	if (cap != null){
 		x.html('<span class="highlighted"> Image Caption: </span>'+cap)
-		var hc = min(parseFloat(x.style('max-height')), parseFloat(x.node().scrollHeight));
-		if (parseFloat(x.style('max-height')) < parseFloat(x.node().scrollHeight)){
-			hc += 10; //for padding, but not sure why I need this if statement
-		}
-		x.style('top',h-hc-2+'px'); //2 for border
-		return hc
-	} else {
-		return 0
 	}
 }
 
@@ -513,8 +506,7 @@ function showImage(images, captions, i){
 	var w = parseFloat(d3.select('#imageDiv').style('width'));
 	var h = parseFloat(d3.select('#imageDiv').style('height'));
 
-	var hc = showCaption(cap);
-	//h -= hc;
+	showCaption(cap);
 
 
 	d3.select('#imageDiv')
@@ -770,12 +762,17 @@ function updateTraining(obj){
 	d3.select('#addObject')
 		.on('click', function(e){
 			recording = !recording
+			var inum = 0;
 			if (recording){
 				record = setInterval(function(){
 					d3.select('#addObject').text("Recording")
 					d3.select('#addObject').classed('buttonDivActive', true);
 					console.log(id)
 					classifier.addImage(id);
+					//var fname = id.replace(/\s/g,'') + '_'+inum+'_';
+					var fname = id + '_'+inum+'_';
+					saveFrames(fname, 'png', 1, 1);
+					inum += 1;
 					if (!recording){
 						d3.select('#trainingNumber').text(classifier.mapStringToIndex.length);
 						clearInterval(record);
@@ -811,9 +808,9 @@ function preload(){
 	yLine = 0;
 
 
-	var frac = 0.5; //fraction of screen width allowed for video/images
-	var m = 10; //margin
-	var b = 50; //button height
+	var frac = 0.75; //fraction of screen width allowed for video/images
+	var m = 0;//10; //margin
+	var b = 0;//50; //button height
 
 	//size this based on the screen
 	//video/image div
@@ -824,11 +821,11 @@ function preload(){
 	videoOuterHeight = videoHeight;
 
 	//image div
-	imageWidth = parseFloat(window.innerWidth)*frac - 2.*m;
+	imageWidth = parseFloat(window.innerWidth) - 2.*m;
 	imageHeight = parseFloat(window.innerHeight) - 3.*m - b;
 	//info div
 	//infoWidth = parseFloat(window.innerWidth) - videoWidth - 3.*m
-	infoWidth = parseFloat(window.innerWidth) - imageWidth - 2.*m;
+	infoWidth = parseFloat(window.innerWidth)*(1-frac) - 2.*m;
 	infoHeight = parseFloat(window.innerHeight) - 2.*m;
 	var useInfoWidth = infoWidth;
 	if (showingMenu){
@@ -875,36 +872,16 @@ function preload(){
 		.style('background-color','black')
 		.style('z-index',2)
 
-	var hc = 100;
-	var x = d3.select('#imageCaption');
-	if (x.node() != null){
-		hc = min(100, parseFloat(x.node().scrollHeight));
-		if (parseFloat(x.style('max-height')) < parseFloat(x.node().scrollHeight)){
-			hc += 10; //for padding, but not sure why I need this if statement
-		}
-	}
-	d3.select('#imageCaption')
-		.style('position','absolute')
-		.style('top',imageHeight-hc-2 + 'px') //for borders
-		.style('left',-2) //for borders
-		.style('padding','5px')
-		.style('margin',0)
-		.style('width',imageWidth-10 + 'px')//for padding
-		.style('max-height',100 + 'px')	
-		.style('background-color',getComputedStyle(document.documentElement).getPropertyValue('--background-color'))
-		.style('color',getComputedStyle(document.documentElement).getPropertyValue('--foreground-color'))
-		.style('z-index',3)
-		// .style('color','white')
-
-
 	d3.select('#infoDiv')
 		.style('position','absolute')
 		.style('top',m + 'px')
-		.style('left',(imageWidth + 2.*m) +'px')
+		.style('left',(parseFloat(window.innerWidth) - useInfoWidth - 2.*m) +'px')
 		.style('margin',0)
 		.style('padding',0)
 		.style('width',useInfoWidth + 'px')
 		.style('height',infoHeight + 'px')
+		.style('z-index',3)
+		.classed('hidden',true)
 
 	menuWidth = 0.25*parseFloat(window.innerWidth);
 	d3.select('#objectMenu')
@@ -947,7 +924,7 @@ function preload(){
 			.style('position','absolute')
 			.style('font-size', '60px')
 			.style('background-color','None')
-			.style('z-index',1)
+			.style('z-index',4)
 			.style('right','15px')
 			.text('>')
 			.classed('hidden',showingVideo);
@@ -963,7 +940,7 @@ function preload(){
 			.style('left','15px')
 			.style('font-size', '60px')
 			.style('background-color','None')
-			.style('z-index',1)
+			.style('z-index',4)
 			.text('<')	
 			.classed('hidden',showingVideo);
 	}
@@ -972,7 +949,6 @@ function preload(){
 	//resize image if necessary
 	var w = parseFloat(d3.select('#imageDiv').style('width'));
 	var h = parseFloat(d3.select('#imageDiv').style('height'));
-	h -= hc;
 	var x = d3.select('#imageDiv').select('img')
 
 	if (x.node() != null){
@@ -1214,6 +1190,109 @@ document.body.onkeyup = function(e){
 	}
 }
 
+/////////////////////
+//for swiping the instructions
+//adapted from https://bl.ocks.org/mbostock/8411383
+d3.select("#imageDiv")
+	.on("touchstart", touchstarted)
+	.on("touchmove", touchmoved)
+	.on("touchend", touchended)
+	.on("mousedown", touchstarted)
+	.on("mousemove", touchmoved)
+	.on("mouseup", touchended);
+let page = d3.select("#imageDiv"),
+	width,
+	height,
+	clientX0,
+	pageX0,
+	pageXMin = 0,
+	pageXMax = window.innerWidth,
+	dragSamples = [],
+	pageXoffset = pageXMax/2.,
+	mousedown = false;
+
+function touchstarted() {
+	mousedown = true;
+	d3.event.preventDefault();
+	dragSamples = [];
+	if (d3.event.changedTouches != null){
+		clientX0 = d3.event.changedTouches[0].clientX;
+	} else {
+		clientX0 = d3.event.clientX
+	}
+	pageX0 = pageXOffset;
+//	d3.event.preventDefault();
+//	page.interrupt();
+}
+
+function touchmoved() {
+	var clientX1;
+	var touch = false;
+	//if (d3.event.hasOwnProperty('changedTouches')){
+	if (d3.event.changedTouches != null){
+		clientX1 = d3.event.changedTouches[0].clientX;
+		touch = true;
+	} else {
+		clientX1 = d3.event.clientX
+	}
+	var pageX1 = pageX0 + clientX0 - clientX1;
+
+	if (touch || mousedown){
+		page.style("-webkit-transform", "translate3d(" + -pageX1  + "px,0,0)");
+
+		if (dragSamples.push({x: pageX1, t: Date.now()}) > 8) dragSamples.shift();
+	}
+}
+
+var direction = 0;
+function touchended() {
+	mousedown = false;
+	var s0 = dragSamples.shift(),
+		s1 = dragSamples.pop(),
+		t1 = Date.now(),
+		x = pageXOffset;
+
+	while (s0 && (t1 - s0.t > 350)) s0 = dragSamples.shift();
+
+	if (s0 && s1) {
+		var vx = (s1.x - s0.x) / (s1.t - s0.t);
+		if (vx > .5) {
+			x = Math.ceil(x / width) * width;
+		} else if (vx < -.5) {
+			x = Math.floor(x / width) * width;
+		}
+	}
+
+	x = Math.max(0, Math.min(page.size() - 1, Math.round(x / width))) * width;
+	direction = 0;
+	page.transition()
+		.duration(500)
+		.ease(d3.easeCubic)
+		.styleTween("-webkit-transform", function() {
+			if (s1) {
+				var i;
+				var goBack = true;
+				if (Math.abs(s1.x) > 0.75*width || Math.abs(vx) > 1.) {
+					if (s1.x < 0) {
+						direction = -1;
+					} else{
+						direction = 1;
+					}
+				} 
+				else {
+					direction = 0;
+				}
+				console.log('dragging', direction)
+				return i && function(t) { return "translate3d(" + i(t) + "px,0,0)"; };
+			}
+		})
+		.on("end", function(){
+			if (direction != 0) {
+				console.log('advancing image', direction)
+			}
+		})
+	
+}
 //processing for fullscreen
 // function mousePressed() {
 //     let fs = fullscreen();
