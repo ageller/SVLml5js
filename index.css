@@ -1,6 +1,6 @@
 :root {
 	--foreground-color: #000000;
-	--background-color: rgba(232, 232, 232, 0.5);
+	--background-color: rgba(150, 150, 150, 0.7);
 	--button-foreground-color: #000000;
 	--button-background-color: #E8E8E8;
 	--highlight-color: #8B008B;
@@ -18,6 +18,9 @@ body {
 
 .scrollable{
 	overflow-y:auto;
+}
+.notScrollable{
+	overflow:hidden;
 }
 .bordered {
 	border:2px solid black;
@@ -41,7 +44,7 @@ body {
 .bar1, .bar2, .bar3 {
 	width: 20px;
 	height: 3px;
-	background-color: var(--button-foreground-color);
+	background-color: white;/*var(--button-foreground-color);*/
 	margin: 4px;
 	transition: 0.4s;
 }
@@ -142,19 +145,21 @@ body {
 
 .collapsible:after {
 	content: '\02795'; /* Unicode character for "plus" sign (+) */
-	font-size: 13px;
+	font-size: 24px;
 	float: left;
 	margin-left: 5px;
 	padding-top:5px;
 	cursor:pointer;
+	color:white;
 }
 .active:after {
 	content: "\2796"; /* Unicode character for "minus" sign (-) */
-	font-size: 13px;
+	font-size: 24px;
 	float: left;
 	margin-left: 5px;
 	padding-top:5px;
 	cursor:pointer;
+	color:white;
 }
 .redBordered{
 	border:10px solid red;

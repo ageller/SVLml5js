@@ -20,6 +20,13 @@ let infoWidth;
 let infoHeight;
 let menuWidth;
 let menuLeft;
+let controlWidth = 15;// pixels width of the small controls div on the side of infoDiv
+
+let setVideoWidth = 540; //width of video in pixels (will be scaled to fill the browser window)
+let videoFac;//factor to scale the video by, will be determined by maxVideoWidth/windowWidth
+
+let windowWidth;
+let windowHeight;
 // let videoConstraints = {
 // 	video: {
 // 		deviceId: "e2d1e7a1022f08a4ab3131ad8b24696ed535c298c08925c16f964da208f352a9",
@@ -66,6 +73,14 @@ let yLine = 0;
 let lineSize = 1;
 let lineSpeed = 10;
 
+let infoDivControlsActive = false;
+let dragInfoSamples = [];
+let slideImageDivActive = false;
+let dragImageSamples = [];
+let dragImageVx = 0.;
+let imagesAvail = [];
+let captionsAvail = [];
+
 function populateMenu(data){
 	//https://www.w3schools.com/howto/howto_js_collapsible.asp
 	var menu = d3.select('#objectMenu')
@@ -106,8 +121,10 @@ function populateMenu(data){
 					if (d3.select('#trainingDiv').classed('hidden')){
 						doClassify = false;
 						updateInfo(d);
+						showHideMenu();
+					} else {
+						updateTraining(d);
 					}
-					updateTraining(d);
 				})
 		})
 	}
@@ -223,29 +240,102 @@ function populateMenu(data){
 		})
 }
 
-function showHideMenu(x){
+
+function showHideMenu(){
 	showingMenu = !showingMenu;
 
-	x.classList.toggle("change");
-	var useinfoWidth = infoWidth
+	d3.select('#showMenuButton').node().classList.toggle("change");
+	var useInfoWidth = infoWidth
+	var pLeft = parseFloat(d3.select('#controlDiv').style('width')) + 5;
 	if (showingMenu){
-		menuLeft = parseFloat(window.innerWidth) - menuWidth;
-		useinfoWidth -= menuWidth
+		menuLeft = windowWidth - menuWidth;
+		useInfoWidth -= menuWidth
+		//pLeft = 0;
+		d3.select('#infoDiv').transition(tTrans)
+			.style('width',useInfoWidth + 'px')
+			.on('end',function(){
+				if (useInfoWidth <= 0){
+					d3.select('#infoDiv')
+						.classed('notScrollable', showingMenu)
+						.style('padding-left',pLeft +'px')
+				}
+			})
 	} else {
-		menuLeft = parseFloat(window.innerWidth);
+		menuLeft = windowWidth;
+		d3.select('#infoDiv')
+			.classed('notScrollable', showingMenu)
+			.style('padding-left',pLeft +'px')
+			.transition(tTrans).style('width',useInfoWidth + 'px')
+
 	}
-	d3.select('#infoDiv').transition(tTrans).style('width',useinfoWidth + 'px')
-	d3.select('#trainingDiv').transition(tTrans).style('width',useinfoWidth + 'px')
-	d3.select('#trainingDiv').selectAll('.trainingText').transition(tTrans).style('width',useinfoWidth -10 + 'px')
+
+	d3.select('#trainingDiv').transition(tTrans).style('width',useInfoWidth + 'px')
+	d3.select('#trainingDiv').selectAll('.trainingText').transition(tTrans).style('width',useInfoWidth -10 + 'px')
 	d3.select('#objectMenu').transition(tTrans).style('left',menuLeft + 'px');
+	
 
 }
+//https://stackoverflow.com/questions/11068240/what-is-the-most-efficient-way-to-parse-a-css-color-in-javascript
+function parseRGBA(input){
+	m = input.match(/^rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+\.\d+)\s*\)/i);
+	if (m) {
+		return [m[1],m[2],m[3],m[4]];
+	}
+}
+function resizeInfoDivStarted(){
+	infoDivControlsActive = true;
+}
+function resizeInfoDivMoved(){
+	if (infoDivControlsActive){
+		if (d3.event != null){
+			dragInfoSamples.push(d3.event)
+		}
+		if (dragInfoSamples.length >2){
+			dragInfoSamples.shift();
+			var x1 = dragInfoSamples[0].screenX;
+			var x2 = dragInfoSamples[1].screenX;
+			var diffX = x2-x1;
+			var width = parseFloat(d3.select('#infoDiv').style('width'));
+			var left = parseFloat(d3.select('#infoDiv').style('left'));
 
+			var y1 = dragInfoSamples[0].screenY;
+			var y2 = dragInfoSamples[1].screenY;
+			var dirY = Math.sign(y1-y2);
+			var m = parseRGBA(d3.select('#infoDiv').style('background-color'));
+			var alpha = parseFloat(m[3])+dirY*0.02;
+			alpha = Math.min(Math.max(alpha,0.01),0.99);
+
+			var useLeft = Math.min(left+diffX, menuLeft-controlWidth-5);
+
+			var useInfoWidth = (width-diffX);
+			infoWidth = useInfoWidth;
+			if (showingMenu){
+				infoWidth = useInfoWidth + menuWidth;
+			}
+			d3.select('#infoDiv')
+				.style('background-color','rgba('+m[0]+','+m[1]+','+m[2]+','+alpha+')')
+				.style('width', useInfoWidth+'px')
+				.style('left', useLeft+'px')
+			d3.select('#objectMenu')
+				.style('background-color','rgba('+m[0]+','+m[1]+','+m[2]+','+alpha+')')
+
+			if (useInfoWidth > 2.*controlWidth){
+				d3.select('#infoDiv').classed('notScrollable', false);
+			} else {
+				d3.select('#infoDiv').classed('notScrollable', true);
+			}
+		}
+	}
+}
+function resizeInfoDivEnded(){
+	infoDivControlsActive = false;
+	dragInfoSamples = [];
+}
 function resetCanvas(fullscreen = true){
 
 	var w = videoWidth;
 	var wOuter = videoOuterWidth;
-	var hClip = parseFloat(window.innerHeight);
+	var hClip = windowHeight;
 	var wOffset = 0;
 	if (!fullscreen){
 		w = imageWidth;
@@ -262,14 +352,23 @@ function resetCanvas(fullscreen = true){
 	var h = w*aspect;
 	var hOuter = hOuter*aspect;
 
-	vW.style('clip', 'rect(0px,'+w*shrink+'px,'+hClip*shrink+'px,'+wOffset+'px)');
+	vW.style('clip', 'rect(0px,'+w*videoFac*shrink+'px,'+hClip*shrink+'px,'+wOffset+'px)');
 	vW.style('transform', 'translate(-'+wOffset+'px,0px)');
 
 	//canvas
 	var cvs = d3.select('canvas');
 	if (canvas == null){
+		pixelDensity(1); //need this or else the pixel density is 2 by default (!), and confuses things (and slows down)
+		video = createCapture(VIDEO);
+		video.size(w,h)
+		video.hide();
+		// videoShow = createCapture(videoConstraints, function(stream) {
+		// 	console.log(stream);
+		//  });
+		videoShow = createCapture(VIDEO);
+		videoShow.size(w,h)
+		videoShow.hide();		
 		canvas = createCanvas(w, h).parent(select('#videoDiv'));
-		//pixelDensity(1);
 		cvs = d3.select('canvas');
 		cvs.classed('bordered', !fullscreen);
 	} 
@@ -279,8 +378,8 @@ function resetCanvas(fullscreen = true){
 	}
 
 	var left = 0;
-	if (fullscreen && w < parseFloat(window.innerWidth)) {
-		left = (parseFloat(window.innerWidth) - w)/2.;
+	if (fullscreen && w < windowWidth) {
+		left = (windowWidth - w)/2.;
 	}
 	cvs.classed('bordered', !fullscreen)
 		.attr('width',w)
@@ -381,14 +480,11 @@ function updateInfo(obj){
 	d3.select('#imageCaption').classed("hidden",true);
 	if (obj[id].hasOwnProperty('images')){
 		if (obj[id]['images'] != null){
-			showImage(obj[id]['images'], obj[id]['captions'], imgI);
-			d3.select('#imageDiv').selectAll('div').classed("hidden",false)
-			d3.select('#forwardImage').on('click', function(){
-				showImage(obj[id]['images'], obj[id]['captions'], imgI+1)
-			})
-			d3.select('#backwardImage').on('click', function(){
-				showImage(obj[id]['images'], obj[id]['captions'], imgI-1)
-			})
+			imagesAvail = obj[id]['images'];
+			captionsAvail = obj[id]['captions'];
+			console.log("N images for",id,imagesAvail.length)
+			loadAllImages(imagesAvail);
+			showCaption(captionsAvail[0]);
 		}
 	}
 	d3.select('#wikipedia').selectAll('span').remove()
@@ -492,31 +588,22 @@ function showCaption(cap){
 	}
 }
 
-function showImage(images, captions, i){
-	if (i < 0){
-		i = images.length-1;
-	}
-	d3.select('#imageDiv').selectAll('img').remove()
-	d3.select('#imageDiv').selectAll('a').remove()
-	imgI = i % images.length;
-	// console.log(i, imgI, images.length, images[imgI])
+function loadAllImages(images){
 
-	img = images[imgI]
-	cap = captions[imgI]
+	d3.select('#imageDiv').selectAll('img').remove()
+
 	var w = parseFloat(d3.select('#imageDiv').style('width'));
 	var h = parseFloat(d3.select('#imageDiv').style('height'));
 
-	showCaption(cap);
 
-
-	d3.select('#imageDiv')
-		// .append('a')
-		// .attr('href',img)
-		// .attr('target','_blank')
+	d3.select('#imageDiv').selectAll('img').data(images).enter()
 		.append('img')
-			.attr('src',img) 
+			.attr('src',function(d){return d}) 
 			.attr('width',w + 'px')
 			.style('position','absolute')
+			.style('left', function(d,i){
+				return (i*windowWidth)+'px';
+			})
 			.style('z-index',0)
 			.on('load', function(){
 				var i = d3.select('#imageDiv').select('img');
@@ -533,6 +620,7 @@ function showImage(images, captions, i){
 			})
 
 }
+
 function initializeML(numClasses=null){
 	// Extract the already learned features from MobileNet (eventually we want to only use our own training set)
 	if (featureExtractor == null){
@@ -804,37 +892,38 @@ function whileTraining(lossValue) {
 
 // set all the sizes
 function preload(){
-	console.log('resizing...', showingVideo, showingTraining)
 	yLine = 0;
-
+	
+	windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+	windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	videoFac = windowWidth/setVideoWidth;
 
 	var frac = 0.75; //fraction of screen width allowed for video/images
-	var m = 0;//10; //margin
-	var b = 0;//50; //button height
 
 	//size this based on the screen
 	//video/image div
 	//videoHeight = parseFloat(window.innerHeight);
-	videoWidth = parseFloat(window.innerWidth);
+	videoWidth = windowWidth/videoFac;
 	videoHeight = videoWidth*aspect;
-	videoOuterWidth = videoWidth;
-	videoOuterHeight = videoHeight;
+	videoOuterWidth = windowWidth;//videoWidth;
+	videoOuterHeight = windowHeight;//videoHeight;
 
 	//image div
-	imageWidth = parseFloat(window.innerWidth) - 2.*m;
-	imageHeight = parseFloat(window.innerHeight) - 3.*m - b;
+	imageWidth = windowWidth;
+	imageHeight = windowHeight;
 	//info div
 	//infoWidth = parseFloat(window.innerWidth) - videoWidth - 3.*m
-	infoWidth = parseFloat(window.innerWidth)*(1-frac) - 2.*m;
-	infoHeight = parseFloat(window.innerHeight) - 2.*m;
+	infoWidth = windowWidth*(1-frac) - controlWidth;
+	menuWidth = infoWidth;
+	infoHeight = windowHeight;
 	var useInfoWidth = infoWidth;
-	if (showingMenu){
-		menuLeft = parseFloat(window.innerWidth) - menuWidth;
-		useInfoWidth -= menuWidth
-	} else {
-		menuLeft = parseFloat(window.innerWidth);
-	}
 
+	if (showingMenu){
+		menuLeft = windowWidth - menuWidth;
+		//useInfoWidth -= menuWidth
+	} else {
+		menuLeft = windowWidth;
+	}
 
 	d3.select('#videoWrapper')
 		.style('position','absolute')
@@ -856,6 +945,7 @@ function preload(){
 		.style('width',videoWidth*shrink + 'px')
 		.style('height',videoHeight*shrink + 'px')	
 		.style('z-index',4)
+		.style('transform','scale('+videoFac+')')
 
 	if (readyVideo){
 		resetCanvas();
@@ -863,27 +953,45 @@ function preload(){
 
 	d3.select('#imageDiv')
 		.style('position','absolute')
-		.style('top',m + 'px')
-		.style('left',m +'px')
+		.style('top',0)
+		.style('left',(-1.*imgI*windowWidth)+'px')
 		.style('padding',0)
 		.style('margin',0)
 		.style('width',imageWidth + 'px')
 		.style('height',imageHeight + 'px')	
 		.style('background-color','black')
 		.style('z-index',2)
+		.on("touchstart", slideImageDivStarted)
+		.on("mousedown", slideImageDivStarted)
 
 	d3.select('#infoDiv')
 		.style('position','absolute')
-		.style('top',m + 'px')
-		.style('left',(parseFloat(window.innerWidth) - useInfoWidth - 2.*m) +'px')
+		.style('top',0)
+		.style('left',(windowWidth - useInfoWidth - controlWidth  - 5) +'px')
 		.style('margin',0)
 		.style('padding',0)
+		.style('padding-left',(controlWidth+5)+'px')
 		.style('width',useInfoWidth + 'px')
 		.style('height',infoHeight + 'px')
 		.style('z-index',3)
-		.classed('hidden',true)
+	if (imagesAvail.length == 0){
+		d3.select('#infoDiv').classed('hidden',true);
+	}
 
-	menuWidth = 0.25*parseFloat(window.innerWidth);
+	d3.select('#controlDiv')
+		.style('position','absolute')
+		.style('top',0)
+		.style('left',0)
+		.style('margin',0)
+		.style('padding',0)
+		.style('width',controlWidth + 'px')
+		.style('height',infoHeight + 'px')
+		.style('z-index',3)
+		.style('background-color','white')
+		.style('opacity',0.8)
+		.style('cursor','ew-resize')
+		.on("mousedown", resizeInfoDivStarted)
+
 	d3.select('#objectMenu')
 		.style('position','absolute')
 		.style('top',0)
@@ -891,22 +999,12 @@ function preload(){
 		.style('margin',0)
 		.style('padding',0)
 		.style('width',menuWidth - 4 + 'px')//to account for 2px border
-		.style('height',parseFloat(window.innerHeight) - 4 + 'px')//to account for 2px border
-
-	d3.select('#resetButton')
-		.style('position','absolute')
-		.style('top',imageHeight + 2.*m + 'px')
-		.style('left',m +'px')
-		.style('margin',0)
-		.style('padding',0)
-		.style('width',imageWidth + 'px')
-		.style('height',b + 'px')
-		.style('z-index',2)
+		.style('height',windowHeight - 4 + 'px')//to account for 2px border
 
 	d3.select('#trainingDiv')
 		.style('position','absolute')
-		.style('top',m + 'px')
-		.style('left',(imageWidth + 2.*m) +'px')
+		.style('top',0)
+		.style('left',imageWidth +'px')
 		.style('margin',0)
 		.style('padding',0)
 		.style('width',useInfoWidth + 'px')
@@ -914,72 +1012,117 @@ function preload(){
 		.classed('hidden',!showingTraining)
 
 
-	//buttons to look through images
-	//check if we need to create the buttons
-	var x = d3.select('#imageDiv').select('#forwardImage');
-	if (x.node() == null){
-		x = d3.select('#imageDiv').append('div')
-			.attr('id','forwardImage')
-			.attr('class','buttonDivInverse')
-			.style('position','absolute')
-			.style('font-size', '60px')
-			.style('background-color','None')
-			.style('z-index',4)
-			.style('right','15px')
-			.text('>')
-			.classed('hidden',showingVideo);
+	//reload the images
+	if (imagesAvail.length > 0){
+		loadAllImages(imagesAvail);
 	}
-	x.style('top',imageHeight/2 - 30 + 'px')
-
-	var x = d3.select('#imageDiv').select('#backwardImage');
-	if (x.node() == null){
-		x = d3.select('#imageDiv').append('div')
-			.attr('id','backwardImage')
-			.attr('class','buttonDivInverse')
-			.style('position','absolute')
-			.style('left','15px')
-			.style('font-size', '60px')
-			.style('background-color','None')
-			.style('z-index',4)
-			.text('<')	
-			.classed('hidden',showingVideo);
-	}
-	x.style('top',imageHeight/2 - 30 + 'px');
-
 	//resize image if necessary
-	var w = parseFloat(d3.select('#imageDiv').style('width'));
-	var h = parseFloat(d3.select('#imageDiv').style('height'));
-	var x = d3.select('#imageDiv').select('img')
+	// var w = parseFloat(d3.select('#imageDiv').style('width'));
+	// var h = parseFloat(d3.select('#imageDiv').style('height'));
+	// var imgs = d3.select('#imageDiv').selectAll('img')
+	// imgs._groups[0].forEach(function(n){
+	// 	var x = d3.select(n)
+	// 	console.log("testing", x)
+	// 	if (x.node() != null){
+	// 		var h2 = parseFloat(x.style('height'))
+	// 		//try to center the image when clipping
+	// 		var offset = max((h2 - h)/2.,0);
+	// 		var ctop = h+offset;
+	// 		x.attr('width',w + 'px')
+	// 			.style('clip', 'rect('+offset+'px,'+w+'px,'+ctop+'px,0px)')
+	// 			.style('top',-offset+'px')
 
-	if (x.node() != null){
-		var h2 = parseFloat(x.style('height'))
-		//try to center the image when clipping
-		var offset = max((h2 - h)/2.,0);
-		var ctop = h+offset;
-		x.attr('width',w + 'px')
-			.style('clip', 'rect('+offset+'px,'+w+'px,'+ctop+'px,0px)')
-			.style('top',-offset+'px')
-
-	}
+	// 	}
+	// });
 
 
 
 	populateTrainingDiv()
 }
 
+function resizeDivs(){
+	// set all the sizes
+	console.log('resizing...', showingVideo, showingTraining)
+	yLine = 0;
+	
+	windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+	windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	videoFac = windowWidth/setVideoWidth;
+
+	var frac = 0.75; //fraction of screen width allowed for video/images
+
+	//size this based on the screen
+	//video/image div
+	//videoHeight = parseFloat(window.innerHeight);
+	videoWidth = windowWidth/videoFac;
+	videoHeight = videoWidth*aspect;
+	videoOuterWidth = windowWidth;//videoWidth;
+	videoOuterHeight = windowHeight;//videoHeight;
+
+	//image div
+	imageWidth = windowWidth;
+	imageHeight = windowHeight;
+	//info div
+	//infoWidth = parseFloat(window.innerWidth) - videoWidth - 3.*m
+	infoWidth = windowWidth*(1-frac) - controlWidth;
+	menuWidth = infoWidth;
+	infoHeight = windowHeight;
+	var useInfoWidth = infoWidth;
+
+	if (showingMenu){
+		menuLeft = windowWidth - menuWidth;
+		//useInfoWidth -= menuWidth
+	} else {
+		menuLeft = windowWidth;
+	}
+
+	d3.select('#videoWrapper')
+		.style('width',videoOuterWidth*shrink)
+		.style('height', videoOuterHeight*shrink)
+
+	d3.select('#videoDiv')
+		.style('width',videoWidth*shrink + 'px')
+		.style('height',videoHeight*shrink + 'px')	
+		.style('transform','scale('+videoFac+')')
+
+	if (readyVideo){
+		resetCanvas();
+	}
+
+	d3.select('#imageDiv')
+		.style('left',(-1.*imgI*windowWidth)+'px')
+		.style('width',imageWidth + 'px')
+		.style('height',imageHeight + 'px')	
+
+	d3.select('#infoDiv')
+		.style('left',(windowWidth - useInfoWidth - controlWidth - 5) +'px')
+		.style('height',infoHeight + 'px')
+
+	d3.select('#controlDiv')
+		.style('height',infoHeight + 'px')
+
+	d3.select('#objectMenu')
+		.style('left',menuLeft + 'px')
+		.style('width',menuWidth - 4 + 'px')//to account for 2px border
+		.style('height',windowHeight - 4 + 'px')//to account for 2px border
+
+	d3.select('#trainingDiv')
+		.style('left',imageWidth +'px')
+		.style('width',useInfoWidth + 'px')
+		.style('height',infoHeight + 'px')
+		.classed('hidden',!showingTraining)
+
+
+	//reload the images
+	if (imagesAvail.length > 0){
+		loadAllImages(imagesAvail);
+	}
+
+}
 
 function setup(){
 
 	resetCanvas();
-
-	video = createCapture(VIDEO);
-	video.hide();
-	// videoShow = createCapture(videoConstraints, function(stream) {
-	// 	console.log(stream);
-	//  });
-	videoShow = createCapture(VIDEO);
-	videoShow.hide();
-
 	background(0);
 
 	var w = video.width;
@@ -996,12 +1139,6 @@ function setup(){
 
 function draw() {
 	background(0);
-  // Flip the canvas so that we get a mirror image
-	translate(videoWidth, 0);
-  	scale(-1.0, 1.0);
-	//scale(-1.0,1.0);    // flip x-axis backwards
-
-
 
 	if (readyModel && readyVideo && doClassify && !captureBackground){//&& !initialCapture){//} 
 		classify();
@@ -1034,6 +1171,12 @@ function draw() {
 		video.updatePixels(); //p5js library
 	}
 
+	// Flip the canvas so that we get a mirror image
+	//and seems like I need to scale this by 0.5 to see the full image?? something is wrong here.
+	var fac = 1.0
+	translate(fac*videoWidth, 0);
+	scale(-fac, fac);
+	//scale(-1.0,1.0);    // flip x-axis backwards
 	if (showBackgroundSubtractedVideo){
 		image(video, 0, 0, videoWidth, videoHeight);// 
 	} else {
@@ -1044,11 +1187,11 @@ function draw() {
 	textSize(24);
 	stroke('gray');
 	strokeWeight(1);
-	var h = Math.min(parseFloat(window.innerHeight), videoHeight)
-  	// Flip back for the text (but this doesn't work when not fullscreened because of clipping)
+	var h = Math.min(windowHeight, videoHeight)
+	// Flip back for the text (but this doesn't work when not fullscreened because of clipping)
 	scale(-1.0, 1.0);	
 	translate(-videoWidth, 0);
-  	text(label, 10, h-10);
+	text(label, 10, h-10);
 
 
 	if (videoReady && doClassify && !captureBackground){
@@ -1072,9 +1215,11 @@ function drawLines(N=150){
 }
 //set the background image
 //https://en.wikipedia.org/wiki/Foreground_detection#Running_Gaussian_average
-function setBackgroundImage(){
-	var w = video.width;
-	var h = video.height;
+function setBackgroundImage(fac = 1.){
+	console.log('setting background image', video.width, video.height, pixels.length)
+
+	var w = fac*video.width;
+	var h = fac*video.height;
 	//https://www.youtube.com/watch?v=nMUMZ5YRxHI
 	for (x=0; x<w; x++) {
 		for (y=0; y<h; y++) {
@@ -1097,10 +1242,10 @@ function setBackgroundImage(){
 
 }
 //divide the image by the mean value
-function divideMean(){
+function divideMean(fac = 1.){
 
-	var w = video.width;
-	var h = video.height;
+	var w = fac*video.width;
+	var h = fac*video.height;
 
 	var meanR = 0;
 	var meanG = 0;
@@ -1129,10 +1274,11 @@ function divideMean(){
 	}
 }
 //subtract the background image
-function subtractBackgroundImage(){
+function subtractBackgroundImage(fac = 1.){
 
-	var w = video.width;
-	var h = video.height;
+	var w = fac*video.width;
+	var h = fac*video.height;
+	//console.log("background", w, h, pixels.length, (w + w*h)*4);
 	for (x=0; x<w; x++) {
 		for (y=0; y<h; y++) {
 			var index = (x + y*w)*4; 
@@ -1161,12 +1307,32 @@ function subtractBackgroundImage(){
 // runs on load
 ///////////////////////////
 // attach some functions to buttons
-window.addEventListener("resize", preload)
+d3.select(window).on("resize", resizeDivs);
+
+d3.select(window).on("mouseup", function(){
+	resizeInfoDivEnded();
+	slideImageDivEnded();
+});
+d3.select(window).on("touchend", function(){
+	resizeInfoDivEnded();
+	slideImageDivEnded();
+});
+d3.select(window).on("mousemove", function(){
+	resizeInfoDivMoved();
+	slideImageDivMoved();
+})
+d3.select(window).on("touchmove", function(){
+	resizeInfoDivMoved();
+	slideImageDivMoved();
+})
+
+
+
 d3.select('#resetButton').on('click',function(e){
 	resetInfo();
 })
 d3.select('#showMenuButton').on('click',function(e){
-	showHideMenu(this);
+	showHideMenu();
 })
 d3.select('#videoDiv').on('click',function(e){
 	//var doClassifySave = doClassify;
@@ -1183,116 +1349,78 @@ d3.json('data/allObjects.json')
 		populateMenu(data)
 	});
 
-//undo fullscreen with escape
-document.body.onkeyup = function(e){
-	if(e.keyCode == 27){
-		resetCanvas(false);
-	}
-}
+// //undo fullscreen with escape
+// document.body.onkeyup = function(e){
+// 	if(e.keyCode == 27){
+// 		resetCanvas(false);
+// 	}
+// }
 
 /////////////////////
 //for swiping the instructions
-//adapted from https://bl.ocks.org/mbostock/8411383
-d3.select("#imageDiv")
-	.on("touchstart", touchstarted)
-	.on("touchmove", touchmoved)
-	.on("touchend", touchended)
-	.on("mousedown", touchstarted)
-	.on("mousemove", touchmoved)
-	.on("mouseup", touchended);
-let page = d3.select("#imageDiv"),
-	width,
-	height,
-	clientX0,
-	pageX0,
-	pageXMin = 0,
-	pageXMax = window.innerWidth,
-	dragSamples = [],
-	pageXoffset = pageXMax/2.,
-	mousedown = false;
 
-function touchstarted() {
-	mousedown = true;
+function slideImageDivStarted(){
+	slideImageDivActive = true;
 	d3.event.preventDefault();
-	dragSamples = [];
-	if (d3.event.changedTouches != null){
-		clientX0 = d3.event.changedTouches[0].clientX;
-	} else {
-		clientX0 = d3.event.clientX
-	}
-	pageX0 = pageXOffset;
-//	d3.event.preventDefault();
-//	page.interrupt();
 }
+function slideImageDivMoved(){
+	if (slideImageDivActive){
+		if (d3.event != null){
+			dragImageSamples.push(d3.event)
+		}
+		if (dragImageSamples.length >2){
+			dragImageSamples.shift();
+			var x1 = dragImageSamples[0].screenX;
+			var x2 = dragImageSamples[1].screenX;
+			var dt = dragImageSamples[1].timeStamp - dragImageSamples[0].timeStamp;
+			var diffX = x2-x1;
+			dragImageVx = diffX/dt;
+			// var s = Math.sign(diffX/dt);
+			// dragImageVx = s*Math.max(Math.abs(dragImageVx),Math.abs(diffX/dt));
+			var left = parseFloat(d3.select('#imageDiv').style('left'));
+			// console.log(x1, x2, dt, diffX, dragImageVx)
 
-function touchmoved() {
-	var clientX1;
-	var touch = false;
-	//if (d3.event.hasOwnProperty('changedTouches')){
-	if (d3.event.changedTouches != null){
-		clientX1 = d3.event.changedTouches[0].clientX;
-		touch = true;
-	} else {
-		clientX1 = d3.event.clientX
-	}
-	var pageX1 = pageX0 + clientX0 - clientX1;
-
-	if (touch || mousedown){
-		page.style("-webkit-transform", "translate3d(" + -pageX1  + "px,0,0)");
-
-		if (dragSamples.push({x: pageX1, t: Date.now()}) > 8) dragSamples.shift();
-	}
-}
-
-var direction = 0;
-function touchended() {
-	mousedown = false;
-	var s0 = dragSamples.shift(),
-		s1 = dragSamples.pop(),
-		t1 = Date.now(),
-		x = pageXOffset;
-
-	while (s0 && (t1 - s0.t > 350)) s0 = dragSamples.shift();
-
-	if (s0 && s1) {
-		var vx = (s1.x - s0.x) / (s1.t - s0.t);
-		if (vx > .5) {
-			x = Math.ceil(x / width) * width;
-		} else if (vx < -.5) {
-			x = Math.floor(x / width) * width;
+			d3.select('#imageDiv')
+				.style('left', (left+diffX)+'px')
 		}
 	}
-
-	x = Math.max(0, Math.min(page.size() - 1, Math.round(x / width))) * width;
-	direction = 0;
-	page.transition()
-		.duration(500)
-		.ease(d3.easeCubic)
-		.styleTween("-webkit-transform", function() {
-			if (s1) {
-				var i;
-				var goBack = true;
-				if (Math.abs(s1.x) > 0.75*width || Math.abs(vx) > 1.) {
-					if (s1.x < 0) {
-						direction = -1;
-					} else{
-						direction = 1;
-					}
-				} 
-				else {
-					direction = 0;
-				}
-				console.log('dragging', direction)
-				return i && function(t) { return "translate3d(" + i(t) + "px,0,0)"; };
-			}
-		})
-		.on("end", function(){
-			if (direction != 0) {
-				console.log('advancing image', direction)
-			}
-		})
-	
 }
+function slideImageDivEnded(){
+	slideImageDivActive = false;
+	dragImageSamples = [];
+	//check if we need to move the image
+	var moveImg = true;
+	if (Math.abs(dragImageVx) < windowWidth/100./20.){ //only if user traverses 1/100 of window size in 20 ms?
+		console.log('too slow')
+		moveImg = false;
+	}
+	if (imagesAvail.length  <= 1){//only if >1 images available
+		console.log('only one image')
+		moveImg = false
+	}
+	if (dragImageVx > 0 && imgI <= 0){ //only if moving in right direction
+		console.log('at first image')
+		moveImg = false
+	}
+	if (dragImageVx < 0 && imgI >= imagesAvail.length-1){ //only if moving in right direction
+		console.log('at last image')
+		moveImg = false
+	}
+	if (moveImg){ 
+		imgI -= Math.sign(dragImageVx)
+		console.log("showing image", imgI)
+		imgI = Math.min(Math.max(imgI, 0),imagesAvail.length-1);
+
+
+	} 
+
+	d3.select('#imageDiv').transition(tTrans)
+		.style('left',(-1.*imgI*windowWidth)+'px')
+
+	showCaption(captionsAvail[imgI]);
+	dragImageVx = 0.;
+}
+
 //processing for fullscreen
 // function mousePressed() {
 //     let fs = fullscreen();
