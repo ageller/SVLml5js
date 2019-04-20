@@ -4,10 +4,15 @@ function showCaption(cap){
 	if (cap != null){
 		x.html('<span class="highlighted"> Image Caption: </span>'+cap)
 		x.selectAll('a').on('click', function(){return false}); //don't allow links
+		//also resize the control Div
+		d3.select('#controlDiv').style('height',windowHeight); //default (do this first, or else we don't get correct height for infoDiv)
+		d3.select('#controlDiv').style('height',d3.select('#infoDiv').node().scrollHeight); //in case we need to extend it
+
 	}
 }
 
 function loadAllImages(images){
+	params.imgI = 0;
 	params.allImageDivs = new Array(images.length);
 
 	d3.select('#imageDiv').selectAll('img').remove()
