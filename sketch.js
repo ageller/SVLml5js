@@ -1378,7 +1378,7 @@ function slideImageDivMoved(){
 			// var s = Math.sign(diffX/dt);
 			// dragImageVx = s*Math.max(Math.abs(dragImageVx),Math.abs(diffX/dt));
 			var left = parseFloat(d3.select('#imageDiv').style('left'));
-			// console.log(x1, x2, dt, diffX, dragImageVx)
+			console.log(x1, x2, dt, diffX, dragImageVx, dragImageSamples)
 
 			d3.select('#imageDiv')
 				.style('left', (left+diffX)+'px')
@@ -1408,7 +1408,7 @@ function slideImageDivEnded(){
 	}
 	if (moveImg){ 
 		imgI -= Math.sign(dragImageVx)
-		console.log("showing image", imgI)
+		console.log("showing image", imgI, dragImageVx)
 		imgI = Math.min(Math.max(imgI, 0),imagesAvail.length-1);
 
 
