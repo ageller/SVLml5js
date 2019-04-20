@@ -16,16 +16,16 @@ function launchVLC3D(movie){
 
 
 	//clear the playlist
-	var url1 = "http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=pl_empty";
+	var url1 = "https://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=pl_empty";
 	
 	//add a movie to playlist
-	var url2 = "http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=in_enqueue&input="+movie;
+	var url2 = "https://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=in_enqueue&input="+movie;
 	
 	//play the playlist
-	var url3 = "http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=pl_play";
+	var url3 = "https://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=pl_play";
 	
 	//go to fullscreen
-	var url4 = "http://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=fullscreen"
+	var url4 = "https://SVL3DTV.adlerplanetarium.org:8080/requests/status.xml?command=fullscreen"
 	
 	function runVLC(url){
 		var http = new XMLHttpRequest();
