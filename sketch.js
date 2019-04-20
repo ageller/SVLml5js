@@ -297,7 +297,7 @@ function resizeInfoDivMoved(){
 			var x2 = dragInfoSamples[1].screenX;
 			var y1 = dragInfoSamples[0].screenY;
 			var y2 = dragInfoSamples[1].screenY;
-			if (dragInfoSamples[0].hasOwnProperty('touches')){ //for TouchEvent
+			if (dragInfoSamples[0].touches){ //for TouchEvent
 				x1 = dragInfoSamples[0].touches[0].screenX;
 				x2 = dragInfoSamples[1].touches[0].screenX;
 				y1 = dragInfoSamples[0].touches[0].screenY;
@@ -1380,7 +1380,7 @@ function slideImageDivMoved(){
 			//for MouseEvent
 			var x1 = dragImageSamples[0].screenX;
 			var x2 = dragImageSamples[1].screenX;
-			if (dragImageSamples[0].hasOwnProperty('touches')){ //for TouchEvent
+			if (dragImageSamples[0].touches){ //for TouchEvent
 				x1 = dragImageSamples[0].touches[0].screenX;
 				x2 = dragImageSamples[1].touches[0].screenX;
 			}
@@ -1391,7 +1391,7 @@ function slideImageDivMoved(){
 			// var s = Math.sign(diffX/dt);
 			// dragImageVx = s*Math.max(Math.abs(dragImageVx),Math.abs(diffX/dt));
 			var left = parseFloat(d3.select('#imageDiv').style('left'));
-			console.log('testing', x1, x2, dt, diffX, dragImageVx, dragImageSamples)
+			console.log('testing2', x1, x2, dt, diffX, dragImageVx, dragImageSamples)
 
 			d3.select('#imageDiv')
 				.style('left', (left+diffX)+'px')
