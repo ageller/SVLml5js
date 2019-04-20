@@ -16,7 +16,7 @@ class SVLobject(object):
 		self.fileName = None
 
 		#User Input Optional
-		self.view = 2.0
+		self.view = 1.0
 		self.captionMaxLen = 1000
 		self.captionMinLen = 10
 
@@ -36,13 +36,18 @@ class SVLobject(object):
 		"""
 		Define the command to fly WWT
 		"""
-		self.WWTurl = 'http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto='+str(self.RA)+','+str(self.Dec)+','+str(self.view)+',0,0'
+		self.WWTurl = 'http://tilewall.adlerplanetarium.org:5050/layerApi.aspx?cmd=mode&lookat=Sky&flyto='+str(self.Dec)+','+str(self.RA)+','+str(self.view)+',0,0'
 
 	def splitString(self,st):
 		"""
 		Split strings from the wikipedia infobox entry, for RA, Dec, and Distance
 		"""
-		digits = np.array([i for i,c in enumerate(st) if (c.isdigit() or c == '.')])
+		digits = np.array([i for i,c in enumerate(st) if (c.isdigit() or c == '.' or c == '-')])
+		prefix = ''
+		if (st[digits[0]] == '-'):
+			digits = digits[1:]
+			prefix = '-'
+
 		diff = np.diff(digits)
 		loc = np.where(diff > 1)[0]
 		#print(digits, diff, loc)
@@ -50,12 +55,12 @@ class SVLobject(object):
 		i0 = digits[0]
 		for lo in loc:
 			i1 = digits[lo+1]-(diff[lo]-1)
-			svals.append(st[i0:i1])
+			svals.append(prefix+st[i0:i1])
 			i0 = digits[loc[0]+1]
 		if (len(loc)>0):
-			svals.append(st[digits[loc[-1]+1]:digits[-1]+1])  
+			svals.append(prefix+st[digits[loc[-1]+1]:digits[-1]+1])  
 		else:
-			svals.append(st[digits[0]:digits[-1]+1]) 
+			svals.append(prefix+st[digits[0]:digits[-1]+1]) 
 		return svals
 
 	def getCaption(self, parsetree,img):
@@ -232,7 +237,7 @@ class SVLobject(object):
 				#get the infobox for RA, Dec, etc.
 				
 				info = wpage.data['infobox']
-				if ('ra' in info):
+				if ('ra' in info and self.RA == None):
 					RAstring = info['ra']
 					print('RAstring', RAstring)
 					st = self.splitString(RAstring)
@@ -240,8 +245,9 @@ class SVLobject(object):
 					self.RA = float(st[0])
 					if (len(st) > 1): self.RA += float(st[1])/60.
 					if (len(st) > 2): self.RA += float(st[2])/3600.
-					
-				if ('dec' in info):
+					print('RA', self.RA, st)
+
+				if ('dec' in info and self.Dec == None):
 					DecString = info['dec']
 					print('DecString', DecString)
 					digits = np.array([i for i,c in enumerate(DecString) if (c.isdigit() or c == '.')])
@@ -250,8 +256,9 @@ class SVLobject(object):
 					self.Dec = float(st[0])
 					if (len(st) > 1): self.Dec += float(st[1])/60.
 					if (len(st) > 2): self.Dec += float(st[2])/3600.
-					
-				if ('distance' in info):
+					print('Dec', self.Dec, st)
+
+				if ('distance' in info and self.distance == None):
 					DistString = info['distance']
 					print('DistString', DistString)
 					st = self.splitString(DistString)
@@ -264,7 +271,7 @@ class SVLobject(object):
 					self.distance = d + ' ' + u
 					print('Distance ', self.distance)
 					
-				if ('size' in info):
+				if ('size' in info and self.size == None):
 					self.size = info['size']
 				
 				if (self.RA and self.Dec and self.view):
