@@ -292,14 +292,24 @@ function resizeInfoDivMoved(){
 		}
 		if (dragInfoSamples.length >2){
 			dragInfoSamples.shift();
+			//for MouseEvent
 			var x1 = dragInfoSamples[0].screenX;
 			var x2 = dragInfoSamples[1].screenX;
+			if (dragInfoSamples[0].hasOwnProperty('changedTouches')){ //for TouchEvent
+				x1 = dragInfoSamples[0].changedTouches[0].screenX;
+				x2 = dragInfoSamples[1].changedTouches[0].screenX;
+			}
 			var diffX = x2-x1;
 			var width = parseFloat(d3.select('#infoDiv').style('width'));
 			var left = parseFloat(d3.select('#infoDiv').style('left'));
 
+			//for MouseEvent
 			var y1 = dragInfoSamples[0].screenY;
 			var y2 = dragInfoSamples[1].screenY;
+			if (dragInfoSamples[0].hasOwnProperty('changedTouches')){ //for TouchEvent
+				x1 = dragInfoSamples[0].changedTouches[0].screenY;
+				x2 = dragInfoSamples[1].changedTouches[0].screenY;
+			}
 			var dirY = Math.sign(y1-y2);
 			var m = parseRGBA(d3.select('#infoDiv').style('background-color'));
 			var alpha = parseFloat(m[3])+dirY*0.02;
