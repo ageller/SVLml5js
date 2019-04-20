@@ -295,21 +295,18 @@ function resizeInfoDivMoved(){
 			//for MouseEvent
 			var x1 = dragInfoSamples[0].screenX;
 			var x2 = dragInfoSamples[1].screenX;
-			if (dragInfoSamples[0].hasOwnProperty('changedTouches')){ //for TouchEvent
-				x1 = dragInfoSamples[0].changedTouches[0].screenX;
-				x2 = dragInfoSamples[1].changedTouches[0].screenX;
+			var y1 = dragInfoSamples[0].screenY;
+			var y2 = dragInfoSamples[1].screenY;
+			if (dragInfoSamples[0].hasOwnProperty('touches')){ //for TouchEvent
+				x1 = dragInfoSamples[0].touches[0].screenX;
+				x2 = dragInfoSamples[1].touches[0].screenX;
+				y1 = dragInfoSamples[0].touches[0].screenY;
+				y2 = dragInfoSamples[1].touches[0].screenY;
 			}
 			var diffX = x2-x1;
 			var width = parseFloat(d3.select('#infoDiv').style('width'));
 			var left = parseFloat(d3.select('#infoDiv').style('left'));
 
-			//for MouseEvent
-			var y1 = dragInfoSamples[0].screenY;
-			var y2 = dragInfoSamples[1].screenY;
-			if (dragInfoSamples[0].hasOwnProperty('changedTouches')){ //for TouchEvent
-				x1 = dragInfoSamples[0].changedTouches[0].screenY;
-				x2 = dragInfoSamples[1].changedTouches[0].screenY;
-			}
 			var dirY = Math.sign(y1-y2);
 			var m = parseRGBA(d3.select('#infoDiv').style('background-color'));
 			var alpha = parseFloat(m[3])+dirY*0.02;
@@ -1383,9 +1380,9 @@ function slideImageDivMoved(){
 			//for MouseEvent
 			var x1 = dragImageSamples[0].screenX;
 			var x2 = dragImageSamples[1].screenX;
-			if (dragImageSamples[0].hasOwnProperty('changedTouches')){ //for TouchEvent
-				x1 = dragImageSamples[0].changedTouches[0].screenX;
-				x2 = dragImageSamples[1].changedTouches[0].screenX;
+			if (dragImageSamples[0].hasOwnProperty('touches')){ //for TouchEvent
+				x1 = dragImageSamples[0].touches[0].screenX;
+				x2 = dragImageSamples[1].touches[0].screenX;
 			}
 
 			var dt = dragImageSamples[1].timeStamp - dragImageSamples[0].timeStamp;
@@ -1394,7 +1391,7 @@ function slideImageDivMoved(){
 			// var s = Math.sign(diffX/dt);
 			// dragImageVx = s*Math.max(Math.abs(dragImageVx),Math.abs(diffX/dt));
 			var left = parseFloat(d3.select('#imageDiv').style('left'));
-			console.log(x1, x2, dt, diffX, dragImageVx, dragImageSamples)
+			console.log('testing', x1, x2, dt, diffX, dragImageVx, dragImageSamples)
 
 			d3.select('#imageDiv')
 				.style('left', (left+diffX)+'px')
