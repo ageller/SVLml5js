@@ -1370,8 +1370,14 @@ function slideImageDivMoved(){
 		}
 		if (dragImageSamples.length >2){
 			dragImageSamples.shift();
+			//for MouseEvent
 			var x1 = dragImageSamples[0].screenX;
 			var x2 = dragImageSamples[1].screenX;
+			if (dragImageSamples[0].hasOwnProperty('changedTouches')){ //for TouchEvent
+				x1 = dragImageSamples[0].changedTouches[0].screenX;
+				x2 = dragImageSamples[1].changedTouches[0].screenX;
+			}
+
 			var dt = dragImageSamples[1].timeStamp - dragImageSamples[0].timeStamp;
 			var diffX = x2-x1;
 			dragImageVx = diffX/dt;
