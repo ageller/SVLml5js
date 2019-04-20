@@ -80,6 +80,7 @@ let dragImageSamples = [];
 let dragImageVx = 0.;
 let imagesAvail = [];
 let captionsAvail = [];
+let allImageDivs = [];
 
 function populateMenu(data){
 	//https://www.w3schools.com/howto/howto_js_collapsible.asp
@@ -438,7 +439,6 @@ function resetInfo(fullscreen = true){
 
 	d3.select('#infoDiv').classed('hidden',true)
 	doClassify = true;
-
 }
 
 
@@ -596,6 +596,7 @@ function showCaption(cap){
 }
 
 function loadAllImages(images){
+	allImageDivs = new Array(images.length);
 
 	d3.select('#imageDiv').selectAll('img').remove()
 
@@ -612,13 +613,16 @@ function loadAllImages(images){
 				return (i*windowWidth)+'px';
 			})
 			.style('z-index',0)
-			.on('load', function(){
-				var i = d3.select('#imageDiv').select('img');
+			.on('load', function(foo, index){
+				var i = d3.select(this);
 				var h2 = parseFloat(i.style('height'))
+				//console.log('images', foo, index)
+				allImageDivs[index] = i;
+				i.attr('height', h2+'px')
 				//try to center the image when clipping
 				var offset = max((h2 - h)/2.,0);
-				var ctop = h+offset;
-				i.style('clip', 'rect('+offset+'px,'+w+'px,'+ctop+'px,0px)')
+				//var ctop = h+offset;
+				//i.style('clip', 'rect('+offset+'px,'+w+'px,'+ctop+'px,0px)')
 				i.style('top',-offset+'px')
 				if (h > h2){
 					i.style('margin-top',(h-h2)/2. + 'px')
@@ -968,6 +972,7 @@ function preload(){
 		.style('height',imageHeight + 'px')	
 		.style('background-color','black')
 		.style('z-index',2)
+		//.style('clip', 'rect(0px,'+windowWidth+'px,'+windowHeight+'px, 0px)')
 		.on("touchstart", slideImageDivStarted)
 		.on("mousedown", slideImageDivStarted)
 
@@ -1029,7 +1034,7 @@ function preload(){
 	// var imgs = d3.select('#imageDiv').selectAll('img')
 	// imgs._groups[0].forEach(function(n){
 	// 	var x = d3.select(n)
-	// 	console.log("testing", x)
+	// 	console.log("testing", x) g
 	// 	if (x.node() != null){
 	// 		var h2 = parseFloat(x.style('height'))
 	// 		//try to center the image when clipping
@@ -1380,21 +1385,32 @@ function slideImageDivMoved(){
 			//for MouseEvent
 			var x1 = dragImageSamples[0].screenX;
 			var x2 = dragImageSamples[1].screenX;
+			var y1 = dragImageSamples[0].screenY;
+			var y2 = dragImageSamples[1].screenY;
 			if (dragImageSamples[0].touches){ //for TouchEvent
 				x1 = dragImageSamples[0].touches[0].screenX;
 				x2 = dragImageSamples[1].touches[0].screenX;
+				y1 = dragImageSamples[0].touches[0].screenY;
+				y2 = dragImageSamples[1].touches[0].screenY;
 			}
 
 			var dt = dragImageSamples[1].timeStamp - dragImageSamples[0].timeStamp;
 			var diffX = x2-x1;
+			var diffY = y2-y1;
 			dragImageVx = diffX/dt;
 			// var s = Math.sign(diffX/dt);
 			// dragImageVx = s*Math.max(Math.abs(dragImageVx),Math.abs(diffX/dt));
 			var left = parseFloat(d3.select('#imageDiv').style('left'));
-			console.log('testing2', x1, x2, dt, diffX, dragImageVx, dragImageSamples)
+			var top = parseFloat(allImageDivs[imgI].style('top'));
+			var hi = parseFloat(allImageDivs[imgI].attr('height'))
+			var newTop = Math.max(Math.min(top+diffY, 0), windowHeight - hi);
+
+			//console.log('testing3', x1, x2, dt, diffX, diffY, top, newTop, left, dragImageVx, dragImageSamples, hi)
+			//console.log('testing3', y1, y2, diffY, top, newTop, hi, windowHeight)
 
 			d3.select('#imageDiv')
 				.style('left', (left+diffX)+'px')
+			allImageDivs[imgI].style('top', newTop+'px')
 		}
 	}
 }
