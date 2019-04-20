@@ -1,3 +1,5 @@
+//chrome command to enable COR : /Applications/Google\ Chrome.app/Contents/MacOS/./Google\ Chrome --disable-web-security --user-data-dir="/Users/ageller/Visualizations/ml5js/onGitHub/SVLml5js/chromeJunk/"
+
 ///////////////////////////
 // runs on load
 ///////////////////////////

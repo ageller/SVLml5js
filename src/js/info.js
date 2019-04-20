@@ -55,7 +55,7 @@ function updateInfo(obj){
 	if (obj[id].hasOwnProperty('WWTurl')){
 		if (obj[id]['WWTurl'] != null){
 			//flyWWT(obj[id]['WWTurl'])
-			launchVLC3D() //testing, will need to send movie to function
+			//launchVLC3D() //testing, will need to send movie to function
 		}
 	}
 	d3.select('#imageDiv').selectAll('img').remove()
