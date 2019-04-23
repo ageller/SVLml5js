@@ -5,6 +5,16 @@
 
 // set all the sizes
 function preload(){
+
+	//test
+	// fname = 'Alpha Centauri_0_0.png'
+	// var path = 'model/trainingImages/' + fname
+	// img = loadImage(path, function(){
+	// 	params.trainingImgs.push(img)
+	// 	img.loadPixels();
+	// 	console.log(path, img, img.pixels.length, pixels.length)
+	// });
+
 	params.yLine = 0;
 	
 	params.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
@@ -118,11 +128,13 @@ function preload(){
 	d3.select('#trainingDiv')
 		.style('position','absolute')
 		.style('top',0)
-		.style('left',params.imageWidth +'px')
+		.style('left',(params.windowWidth - 2.*useInfoWidth - params.controlWidth  - 5) +'px')
 		.style('margin',0)
 		.style('padding',0)
-		.style('width',useInfoWidth + 'px')
+		.style('padding-left',(params.controlWidth+5)+'px')
+		.style('width',2.*useInfoWidth + 'px')
 		.style('height',params.infoHeight + 'px')
+		.style('z-index',3)
 		.classed('hidden',!params.showingTraining)
 
 
@@ -159,12 +171,6 @@ function setup(){
 	resetCanvas();
 	background(0);
 
-	var w = params.video.width;
-	var h = params.video.height;
-	params.backgroundImageMean = new Array(w*h);
-	params.backgroundImageVariance = new Array(w*h);
-	d3.select('canvas').classed('redBordered',true)
-
 	initializeML();
 	loadSavedModel();
 }
@@ -174,35 +180,27 @@ function setup(){
 function draw() {
 	background(0);
 
-	if (params.readyModel && params.readyVideo && params.doClassify && !params.captureBackground){//&& !params.initialCapture){//} 
-		classify();
-	} 
 
+	//allow some time to get the background settled
+	if (params.iBackground < params.nBackground){
+		if (params.readyVideo && params.readyOpenCV){
+			params.iBackground += 1;
+			console.log('countdown...',params.nBackground - params.iBackground);
+		}
+	} else {
+		params.initialCapture = false;
+	}
 
 	//for background subtraction
-	if (params.readyVideo){
+	if (params.readyVideo && !params.loadingImagesToModel){
 		params.video.loadPixels();
-		divideMean(); // my function to divide out the mean value, to try to remove fluctuations in exposure time
-		if (params.captureBackground){ //if we don't constantly do this, then any fluctuations in the exposure time of the webcam (which I can't control) changes the subtraction, but if we do constantly do this, we can't hold an object in the same place!
-			setBackgroundImage(); //create the background image
-		}
 		if (params.useBackground){
-			if (params.backgroundImageMean != null) {
-				subtractBackgroundImage(); //my function below to set the pixels 
-			}
-		}
-		if (params.initialCapture){
-			params.label = 'capturing background'
-			console.log(params.iBackground, params.nBackground);
-		}
-		if (params.captureBackground && params.initialCapture && params.iBackground > params.nBackground){ //initial background capture
-			params.captureBackground = false;
-			params.initialCapture = false;
-			d3.select('canvas').classed('redBordered',false)
-
+			params.openCVcap.read(params.openCVframe);
+        	params.openCVfgbg.apply(params.openCVframe, params.openCVfgmask);
+        	applyOpenCVmaskToP5(params.openCVfgmask);
+			params.video.updatePixels(); //p5js library
 		}
 
-		params.video.updatePixels(); //p5js library
 	}
 
 	// Flip the canvas so that we get a mirror image
@@ -211,24 +209,29 @@ function draw() {
 	translate(fac*params.videoWidth, 0);
 	scale(-fac, fac);
 	//scale(-1.0,1.0);    // flip x-axis backwards
-	if (params.showBackgroundSubtractedVideo){
+
+
+	if (params.showBackgroundSubtractedVideo || params.showingTraining){
 		image(params.video, 0, 0, params.videoWidth, params.videoHeight);// 
 	} else {
 		image(params.videoShow, 0, 0, params.videoWidth, params.videoHeight);// 
 	}
+	//do the classification?
+	if (params.readyModel && params.readyVideo && params.doClassify && !params.initialCapture){ 
+		classify();
+	} 
 
-	fill('gray');
-	textSize(24);
-	stroke('gray');
-	strokeWeight(1);
-	var h = Math.min(params.windowHeight, params.videoHeight)
-	// Flip back for the text (but this doesn't work when not fullscreened because of clipping)
-	scale(-1.0, 1.0);	
-	translate(-params.videoWidth, 0);
-	text(params.label, 10, h-10);
+	// add the label
+	// fill('gray');
+	// textSize(20);
+	// stroke('gray');
+	// strokeWeight(1);
+	// // Flip back for the text (but this doesn't work when not fullscreened because of clipping)
+	// scale(-1.0, 1.0);	
+	// translate(-params.videoWidth, 0);
+	// text(params.label, 10, params.videoHeight - params.windowHeight/params.videoFac - 10); //something is not right here
 
-
-	if (videoReady && params.doClassify && !params.captureBackground && params.drawLine){
+	if (videoReady && params.doClassify && params.drawLine){
 		drawLines();
 	}
 

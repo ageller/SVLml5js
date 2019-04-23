@@ -137,7 +137,9 @@ function resizeInfoDivMoved(){
 				.style('left', useLeft+'px')
 			d3.select('#objectMenu')
 				.style('background-color','rgba('+m[0]+','+m[1]+','+m[2]+','+alpha+')')
-
+			d3.select('#trainingDiv')
+				.style('background-color','rgba('+m[0]+','+m[1]+','+m[2]+','+alpha+')')
+				
 			if (useInfoWidth > 2.*params.controlWidth){
 				d3.select('#infoDiv').classed('notScrollable', false);
 			} else {

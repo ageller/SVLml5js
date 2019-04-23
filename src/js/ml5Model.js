@@ -18,7 +18,7 @@ function initializeML(numClasses=null){
 
 function modelReady(){
 	console.log('Base Model (MobileNet) Loaded!');
-	params.label = '';
+	params.label = 'model ready';
 	params.readyModel = true;
 	resetTrainingText("Model Loaded")
 
@@ -201,6 +201,41 @@ function populateTrainingDiv(){
 			params.showingTraining = false;
 		})
 
+
+}
+
+//If I want to retrain with new images and also keep the old model, I think that I need to load a blank model and add in all the old images, then add the new ones, then train
+function addImageToModel(){
+
+	params.trainingImageList.forEach(function(d, imgI){
+		var path = d.fileName
+		var p1 = path.lastIndexOf('_')
+		var id = path.slice(0,p1);
+		var p2 = id.lastIndexOf('_')
+		var p3 = id.lastIndexOf('/')+1
+		id = id.slice(p3,p2)
+		var img = loadImage(path, function(){
+			params.video.loadPixels();
+			img.loadPixels();
+			console.log(path, id, img, img.pixels.length, pixels.length)
+			//replace the video pixels with this image
+			//https://www.youtube.com/watch?v=nMUMZ5YRxHI
+			for (x=0; x<params.videoWidth; x++) {
+				for (y=0; y<params.videoHeight; y++) {
+					var index = (x + y*params.videoWidth)*4; //p5js pixel location
+					for (k=0; k<4; k++) {
+						pixels[index + k] = img.pixels[index + k]; 
+					}
+				}
+			}
+			params.video.updatePixels();
+			//console.log('loaded image', id, img);
+			params.classifier.addImage(id);	
+			if (imgI == params.trainingImageList.length){
+				params.loadingImagesToModel = false
+			}
+		});
+	});
 
 }
 

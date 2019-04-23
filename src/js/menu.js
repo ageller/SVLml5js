@@ -70,7 +70,9 @@ function populateMenu(data){
 		.style('font-size','16px')
 		.text('Update Model Training')
 		.on('click', function(e){
-			resetInfo(fullscreen = false);
+			params.loadingImagesToModel = true;
+			addImageToModel();
+			resetInfo();
 			params.showingTraining = !params.showingTraining;
 			params.doClassify = !params.showingTraining;
 			elem = d3.select('#trainingButton')
@@ -85,35 +87,36 @@ function populateMenu(data){
 			} 
 		})
 
-	//background capture
-	menu.append('div')
-		.attr('class','buttonDiv')
-		.attr('id','backgroundCaptureButton')
-		.style('width',params.menuWidth-40 + 'px')
-		.style('margin','10px')
-		.style('padding','2px')
-		.style('height','20px')
-		.style('font-size','16px')
-		.text('Capture Background Image')
-		.on('click', function(e){
-			elem = d3.select('#backgroundCaptureButton');
-			params.captureBackground = !params.captureBackground;
-			d3.select('canvas').classed('redBordered',params.captureBackground)
-			elem.classed('buttonDivActive', params.captureBackground)
-			if (params.captureBackground){
-				var w = params.video.width;
-				var h = params.video.height;
-				params.backgroundImageMean = new Array(w*h);
-				params.backgroundImageVariance = new Array(w*h);
-				params.useBackground = true
-				params.iBackground = 0;
-				elem.text('Capturing Background Image')
-			} else {
-				elem.text('Capture Background Image')
-			}
-		})
+	// //background capture
+	// menu.append('div')
+	// 	.attr('class','buttonDiv')
+	// 	.attr('id','backgroundCaptureButton')
+	// 	.style('width',params.menuWidth-40 + 'px')
+	// 	.style('margin','10px')
+	// 	.style('padding','2px')
+	// 	.style('height','20px')
+	// 	.style('font-size','16px')
+	// 	.text('Capture Background Image')
+	// 	.on('click', function(e){
 
-	//background capture
+	// 		elem = d3.select('#backgroundCaptureButton');
+	// 		params.captureBackground = !params.captureBackground;
+	// 		d3.select('canvas').classed('redBordered',params.captureBackground)
+	// 		elem.classed('buttonDivActive', params.captureBackground)
+	// 		if (params.captureBackground){
+	// 			var w = params.video.width;
+	// 			var h = params.video.height;
+	// 			params.backgroundImageMean = new Array(w*h);
+	// 			params.backgroundImageVariance = new Array(w*h);
+	// 			params.useBackground = true
+	// 			params.iBackground = 0;
+	// 			elem.text('Capturing Background Image')
+	// 		} else {
+	// 			elem.text('Capture Background Image')
+	// 		}
+	// 	})
+
+	//turn on/off background subtraction
 	menu.append('div')
 		.attr('class','buttonDiv')
 		.attr('id','backgroundOnOffButton')
@@ -208,8 +211,6 @@ function showHideMenu(){
 
 	}
 
-	d3.select('#trainingDiv').transition(params.tTrans).style('width',useInfoWidth + 'px')
-	d3.select('#trainingDiv').selectAll('.trainingText').transition(params.tTrans).style('width',useInfoWidth -10 + 'px')
 	d3.select('#objectMenu').transition(params.tTrans).style('left',params.menuLeft + 'px');
 	
 

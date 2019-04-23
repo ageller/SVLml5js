@@ -1,0 +1,12 @@
+fileName
+model/trainingImages/Alpha Centauri_0_0.png
+model/trainingImages/Alpha Centauri_1_0.png
+model/trainingImages/Alpha Centauri_2_0.png
+model/trainingImages/Alpha Centauri_3_0.png
+model/trainingImages/Alpha Centauri_4_0.png
+model/trainingImages/Alpha Centauri_5_0.png
+model/trainingImages/Alpha Centauri_6_0.png
+model/trainingImages/Alpha Centauri_7_0.png
+model/trainingImages/Alpha Centauri_8_0.png
+model/trainingImages/Alpha Centauri_9_0.png
+model/trainingImages/Alpha Centauri_10_0.png

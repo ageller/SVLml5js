@@ -48,13 +48,16 @@ d3.select('#videoDiv').on('click',function(e){
 })
 
 //read in the data
-d3.json('data/allObjects.json')
-	.then(function(data) {
-		params.objData = data;
-		console.log(params.objData)
-		populateMenu(data)
+Promise.all([
+	d3.json('data/allObjects.json'),
+	d3.csv('model/trainingImages/imageList.txt')
+]).then(function(data) {
+		params.objData = data[0];
+		params.trainingImageList = data[1];
+		console.log('objects list',params.objData)
+		console.log('training images', params.trainingImageList)
+		populateMenu(data[0])
 	});
-
 // //undo fullscreen with escape
 // document.body.onkeyup = function(e){
 // 	if(e.keyCode == 27){

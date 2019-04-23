@@ -2,6 +2,7 @@ let params;
 function defineParams(){
 	params = new function() {
     	this.objData = null; //holds the input data for objects that will be shown in the menu 
+		this.trainingImageList = null; //will hold a list of images from the current model (read in from a file)
 
     	//related ml5 classifier
     	this.classifier = null; //ml5 classifies object
@@ -14,6 +15,7 @@ function defineParams(){
 		this.showingTraining = false;
 		this.resultsReady = true;
 		this.confidenceLim = 0.99; //limit before object is considered identified.
+		this.loadingImagesToModel = false; //will be true if we are reloading images into the model
 
 		//related to the p5js video
     	this.video = null; //holds the p5js video object that we use to classify (can use background sub)
@@ -83,16 +85,22 @@ function defineParams(){
 		this.showBackgroundSubtractedVideo = false; //don't show the user the background subtracted video (unless they click the button)
 		this.useBackground = true; //start with background subtraction
 		this.captureBackground = true; //start with background subtraction
+		this.backgroundImage = null; //will hold the background image
+		//openCV for background subtraction
+		this.readyOpenCV = false;
+		this.openCVvideo = null;
+		this.openCVcap = null ;
+		this.openCVframe = null;
+		this.openCVfgmask = null;
+		this.openCVfgbg = null;
+
 		this.initialCapture = true; //only true during the initial background capture
 		this.nBackground = 100; //number of frames for the initial background capture
 		this.iBackground = 0; //counter for the initial background capture frames
-		this.backgroundImageMean = null; //will hold the image mean pixel array for background subtraction
-		this.backgroundImageVariance = null; //will hold the image mean variance array for background subtraction
-		//need to tune these...
-		this.rhoBackground = 0.01; //for time average of mean and variance
-		this.backgroundChi2Threshold = 0; //chi2 values below this are considered background (variance seems better?)
-		this.backgroundVarianceThreshold = 25; //variance values below this are considered background
-
+		//settings for the openCV background subtraction MOG2 
+		this.openCVhistory = 500;
+		this.openCVvarThreshold = 16;
+		this.openCVdetectShadows = true;
 
 		//if we want to scanning draw the line on top of the video (might be fun... or distracting)
 		this.drawLine = false; //set to true to draw the line
