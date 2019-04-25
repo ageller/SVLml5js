@@ -21,6 +21,7 @@ function preload(){
 	params.windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 	params.videoFac = params.windowWidth/params.setVideoWidth;
 
+
 	var frac = 0.75; //fraction of screen width allowed for video/images
 
 	//size this based on the screen
@@ -28,6 +29,11 @@ function preload(){
 	//params.videoHeight = parseFloat(window.innerHeight);
 	params.videoWidth = params.windowWidth/params.videoFac;
 	params.videoHeight = params.videoWidth*params.aspect;
+	console.log("sizes", params.videoHeight, params.videoWidth, params.windowHeight, params.windowWidth, params.videoFac)
+	if (params.videoHeight*params.videoFac < params.windowHeight){
+		params.videoHeight = params.windowHeight;
+		params.videoWidth = params.videoHeight/params.aspect;
+	}
 	params.videoOuterWidth = params.windowWidth;//params.videoWidth;
 	params.videoOuterHeight = params.windowHeight;//params.videoHeight;
 

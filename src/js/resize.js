@@ -14,6 +14,10 @@ function resizeDivs(){
 	//params.videoHeight = parseFloat(window.innerHeight);
 	params.videoWidth = params.windowWidth/params.videoFac;
 	params.videoHeight = params.videoWidth*params.aspect;
+	if (params.videoHeight*params.videoFac < params.windowHeight){
+		params.videoHeight = params.windowHeight;
+		params.videoWidth = params.videoHeight/params.aspect;
+	}
 	params.videoOuterWidth = params.windowWidth;//params.videoWidth;
 	params.videoOuterHeight = params.windowHeight;//params.videoHeight;
 
@@ -34,14 +38,6 @@ function resizeDivs(){
 		params.menuLeft = params.windowWidth;
 	}
 
-	d3.select('#videoWrapper')
-		.style('width',params.videoOuterWidth*params.shrink)
-		.style('height', params.videoOuterHeight*params.shrink)
-
-	d3.select('#videoDiv')
-		.style('width',params.videoWidth*params.shrink + 'px')
-		.style('height',params.videoHeight*params.shrink + 'px')	
-		.style('transform','scale('+params.videoFac+')')
 
 	if (params.readyVideo){
 		resetCanvas();

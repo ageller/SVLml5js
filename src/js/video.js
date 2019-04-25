@@ -60,6 +60,13 @@ function resetCanvas(){
 	var vD = d3.select('#videoDiv');
 	//clip and center so that I can switch between full screen and not
 
+	vW.style('width',params.videoOuterWidth*params.shrink)
+		.style('height', params.videoOuterHeight*params.shrink)
+
+	vD.style('width',params.videoWidth*params.shrink + 'px')
+		.style('height',params.videoHeight*params.shrink + 'px')	
+		.style('transform','scale('+params.videoFac+')')
+
 	vW.style('clip', 'rect(0px,'+params.videoWidth*params.videoFac*params.shrink+'px,'+params.windowHeight*params.shrink+'px, 0px)');
 
 	//video element for OpenCV
@@ -96,6 +103,10 @@ function resetCanvas(){
 	if (params.videoWidth < params.windowWidth) {
 		left = (params.windowWidth - params.videoWidth)/2.; //don't understand this /2??
 	}
+	var top = 0;
+	if (params.videoHeight < params.windowHeight) {
+		top = (params.windowHeight - params.videoHeight)/2.; //don't understand this /2??
+	}	
 	cvs.classed('bordered', false)
 		.attr('width',params.videoWidth)
 		.attr('height',params.videoHeight)
@@ -112,6 +123,7 @@ function resetCanvas(){
 		.style('width',params.videoWidth*params.shrink+'px')
 		.style('height',params.videoHeight*params.shrink+'px')
 		.style('margin-left', left*params.shrink+'px')
+		.style('margin-top', top*params.shrink+'px')
 
 
 	if (params.shrink == 1.){
