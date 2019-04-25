@@ -83,7 +83,7 @@ function gotResults(err, results) {
 		params.resultsReady = true;
 	}
 	if (results && results[0]) {
-		//console.log("err, results[0]", err, results[0])
+		console.log("err, results[0]", err, results[0])
 		params.label = results[0].label;
 		confidence = results[0].confidence;
 		if (confidence > params.confidenceLim){
@@ -215,6 +215,16 @@ function addImageToModel(){
 		var p3 = id.lastIndexOf('/')+1
 		id = id.slice(p3,p2)
 		var img = loadImage(path, function(){
+			//rescale to the video size (does this work?)
+			var vAspect = params.videoWidth/params.videoHeight;
+			var iAspect = img.width/img.height;
+			var newiHeight = params.videoWidth/iAspect;
+			console.log("aspects, newiHeight", vAspect, iAspect, newiHeight);
+			if (newiHeight >= params.videoHeight){
+				img.resize(params.videoWidth, 0)
+			} else {
+				img.resize(0, params.videoHeight)
+			}
 			params.video.loadPixels();
 			img.loadPixels();
 			console.log(path, id, img, img.pixels.length, pixels.length)
