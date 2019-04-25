@@ -70,7 +70,7 @@ function populateMenu(data){
 		.style('font-size','16px')
 		.text('Update Model Training')
 		.on('click', function(e){
-			params.loadingImagesToModel = true;
+			//params.loadingImagesToModel = true;
 			//addImageToModel();
 			resetInfo();
 			params.showingTraining = !params.showingTraining;
