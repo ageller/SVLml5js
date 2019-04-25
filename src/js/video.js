@@ -140,6 +140,20 @@ function resetCanvas(){
 
 }
 
+function drawLines(){
+
+	//line as if scanning (for fun)
+	strokeWeight(1.);
+	for (var i=0; i<params.lineSize; i++){
+		stroke(0, 255, 0, 255*(1. - i/(params.lineSize-1)));
+		var y = params.yLine - Math.sign(params.lineSpeed)*i;
+		line(0,  y, params.videoWidth, y);
+	}
+	if (params.yLine > params.windowHeight/params.videoFac+params.lineSize || params.yLine < 0) {
+		params.lineSpeed *= -1;
+	}
+	params.yLine += params.lineSpeed;
+}
 
 //old background subtraction functions... now using openCV
 
@@ -236,17 +250,3 @@ function resetCanvas(){
 
 // }
 
-// function drawLines(){
-
-// 	//line as if scanning (for fun)
-// 	strokeWeight(1.);
-// 	for (var i=0; i<N; i++){
-// 		stroke(0, 255, 0, 255*(1. - i/(params.lineSize-1)));
-// 		var y = params.yLine - Math.sign(params.lineSpeed)*i;
-// 		line(0,  y, params.videoWidth, y);
-// 	}
-// 	if (params.yLine > params.videoHeight || params.yLine < 0) {
-// 		params.lineSpeed *= -1;
-// 	}
-// 	params.yLine += params.lineSpeed;
-// }

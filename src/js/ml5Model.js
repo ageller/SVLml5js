@@ -1,18 +1,27 @@
-function initializeML(numClasses=null){
-	// Extract the already learned features from MobileNet (eventually we want to only use our own training set)
-	if (params.featureExtractor == null){
-		params.featureExtractor = ml5.featureExtractor('MobileNet', modelReady);
-	} else {
-		numClasses += params.featureExtractor.numClasses;
-	}
-	if (numClasses != null){
-		params.featureExtractor.numClasses = numClasses;
-	}
-	// Initialize the Image Classifier method with MobileNet and the video as the second argument
-	params.classifier = params.featureExtractor.classification(params.video, videoReady);
-	params.classifier.numClasses = numClasses;
-	//params.classifier = params.featureExtractor.regression(params.video, videoReady);
-	//params.classifier = ml5.imageClassifier('MobileNet', params.video, videoReady);  
+function initializeML(numClasses=null, empty=false, interval=10){
+	var check = setInterval(function(){
+		if (typeof ml5.featureExtractor != "undefined") {
+			clearInterval(check);
+			// Extract the already learned features from MobileNet (eventually we want to only use our own training set)
+			if (params.featureExtractor == null){
+				params.featureExtractor = ml5.featureExtractor('MobileNet', modelReady);
+			} else {
+				numClasses += params.featureExtractor.numClasses;
+			}
+			if (numClasses != null){
+				params.featureExtractor.numClasses = numClasses;
+			}
+			// Initialize the Image Classifier method with MobileNet and the video as the second argument
+			params.classifier = params.featureExtractor.classification(params.video, videoReady);
+			params.classifier.numClasses = numClasses;
+			//params.classifier = params.featureExtractor.regression(params.video, videoReady);
+			//params.classifier = ml5.imageClassifier('MobileNet', params.video, videoReady);  
+			if (!empty) {
+				loadSavedModel();
+			}
+
+		}
+	}, interval);
 
 }
 
@@ -129,7 +138,7 @@ function populateTrainingDiv(){
 			params.classifier = null;
 			params.doClassify = false;
 			resetTrainingText("Loading Empty Model ...");
-			initializeML(numClasses = params.numObjects);
+			initializeML(numClasses = params.numObjects, empty = true);
 		})
 
 	d.append('div')

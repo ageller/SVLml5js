@@ -178,7 +178,6 @@ function setup(){
 	background(0);
 
 	initializeML();
-	loadSavedModel();
 }
 
 
@@ -237,7 +236,7 @@ function draw() {
 	// translate(-params.videoWidth, 0);
 	// text(params.label, 10, params.videoHeight - params.windowHeight/params.videoFac - 10); //something is not right here
 
-	if (videoReady && params.doClassify && params.drawLine){
+	if (params.readyVideo && params.doClassify && params.drawLine){
 		drawLines();
 	}
 
