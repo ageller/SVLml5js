@@ -102,6 +102,9 @@ function gotResults(err, results) {
 			} else {
 				console.log("have result", params.label)
 				console.log(results)
+				if (params.showingMenu){
+					showHideMenu();
+				}
 				foundObject = findObject(params.label);
 			}
 		} else {
