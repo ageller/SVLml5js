@@ -219,7 +219,7 @@ function addImageToModel(){
 			var vAspect = params.videoWidth/params.videoHeight;
 			var iAspect = img.width/img.height;
 			var newiHeight = params.videoWidth/iAspect;
-			console.log("aspects, newiHeight", vAspect, iAspect, newiHeight);
+			//console.log("aspects, newiHeight", vAspect, iAspect, newiHeight);
 			if (newiHeight >= params.videoHeight){
 				img.resize(params.videoWidth, 0)
 			} else {

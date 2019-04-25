@@ -109,7 +109,7 @@ function resetCanvas(){
 		.style('width',params.videoOuterWidth*params.shrink+'px')
 		.style('height',params.videoOuterHeight*params.shrink+'px')
 	vD.transition(params.tTrans)
-		.style('width',params.vidoeWidth*params.shrink+'px')
+		.style('width',params.videoWidth*params.shrink+'px')
 		.style('height',params.videoHeight*params.shrink+'px')
 		.style('margin-left', left*params.shrink+'px')
 

@@ -65,8 +65,9 @@ function resizeDivs(){
 		.style('height',params.windowHeight - 4 + 'px')//to account for 2px border
 
 	d3.select('#trainingDiv')
-		.style('left',params.imageWidth +'px')
-		.style('width',useInfoWidth + 'px')
+		.style('left',(params.windowWidth - 2.*useInfoWidth - params.controlWidth  - 5) +'px')
+		.style('padding-left',(params.controlWidth+5)+'px')
+		.style('width',2.*useInfoWidth + 'px')
 		.style('height',params.infoHeight + 'px')
 		.classed('hidden',!params.showingTraining)
 
@@ -82,7 +83,11 @@ function resizeDivs(){
 
 
 function gotoFullscreen(){
-	fullscreen(true);
-	resizeCanvas();
+	fullscreen(true)
+	setTimeout(function(){
+		resizeCanvas()
+		resizeDivs();		
+	}, 1000)
+
 	//setTimeout(resizeCanvas(), 1000) //would prefer a callback from fullscreen...
 }
