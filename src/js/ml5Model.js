@@ -268,7 +268,7 @@ function updateTraining(obj){
 					params.classifier.addImage(id);
 					//var fname = id.replace(/\s/g,'') + '_'+inum+'_';
 					var fname = id + '_'+inum+'_';
-					saveFrames(fname, 'png', 1, 1);
+					//saveFrames(fname, 'png', 1, 1);
 					inum += 1;
 					if (!recording){
 						d3.select('#trainingNumber').text(params.classifier.mapStringToIndex.length);
