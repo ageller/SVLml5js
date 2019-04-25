@@ -199,7 +199,7 @@ function draw() {
 	//for background subtraction
 	if (params.readyVideo && !params.loadingImagesToModel){
 		params.video.loadPixels();
-		if (params.useBackground){
+		if (params.useBackground && params.readyOpenCV){
 			params.openCVcap.read(params.openCVframe);
         	params.openCVfgbg.apply(params.openCVframe, params.openCVfgmask);
         	applyOpenCVmaskToP5(params.openCVfgmask);
