@@ -71,7 +71,7 @@ function populateMenu(data){
 		.text('Update Model Training')
 		.on('click', function(e){
 			params.loadingImagesToModel = true;
-			addImageToModel();
+			//addImageToModel();
 			resetInfo();
 			params.showingTraining = !params.showingTraining;
 			params.doClassify = !params.showingTraining;
