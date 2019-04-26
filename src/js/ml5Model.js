@@ -289,7 +289,7 @@ function updateTraining(obj){
 					params.classifier.addImage(id);
 					//var fname = id.replace(/\s/g,'') + '_'+inum+'_';
 					if (id != 'Blank'){
-						var fname = id + '_'+inum+'_';
+						var fname = id + '_'+inum.toString().padStart(3, '0')+'_';
 						saveFrames(fname, 'png', 1, 1);
 					}
 					inum += 1;
