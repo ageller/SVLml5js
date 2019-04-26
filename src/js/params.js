@@ -68,7 +68,8 @@ function defineParams(){
 		//size for the info div (defined by window size)
 		this.infoWidth = null;
 		this.infoHeight = null;
-
+		this.resizing = false;
+		
 		//size and location for the menu div (defined by window size)
 		this.menuWidth;
 		this.menuLeft;

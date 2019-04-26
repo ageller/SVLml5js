@@ -39,61 +39,63 @@ function getDivSizes(){
 }
 
 function resizeDivs(){
-	// set all the sizes
-	console.log('resizing...')
-	params.yLine = 0;
-	var useInfoWidth = getDivSizes();
 
-	if (params.readyVideo){
-		resetCanvas();
+	if (!params.resizing){
+		// set all the sizes
+		console.log('resizing...')
+		params.yLine = 0;
+		var useInfoWidth = getDivSizes();
+
+		if (params.readyVideo){
+			resetCanvas();
+		}
+
+		var iLeft = params.windowWidth - useInfoWidth - 5;
+		if (params.showingMenu){
+			iLeft -= params.menuWidth;
+		}
+		d3.select('#imageDiv')
+			.style('left',(-1.*params.imgI*params.windowWidth)+'px')
+			.style('width',params.imageWidth + 'px')
+			.style('height',params.imageHeight + 'px')	
+
+		d3.select('#infoDiv')
+			.style('left',iLeft +'px')
+			.style('height',params.infoHeight + 'px')
+			.style('width',useInfoWidth + 'px')
+
+
+		d3.select('#controlDiv')
+			.style('left',(iLeft - params.controlWidth) +'px')
+			.style('width',params.controlWidth + 'px')
+			.style('height',params.windowHeight + 'px')
+
+		d3.select('#controlDivText')
+			.style('left',params.controlWidth/2 - 5 + 'px')
+			.style('top',params.windowHeight/2. -20 + 'px')	
+
+		d3.select('#objectMenu')
+			.style('left',params.menuLeft + 'px')
+			.style('width',params.menuWidth - 4 + 'px')//to account for 2px border
+			.style('height',params.windowHeight - 4 + 'px')//to account for 2px border
+
+		d3.select('#objectMenu').selectAll('.buttonDiv')
+			.style('width',params.menuWidth-40 + 'px')
+
+		d3.select('#trainingDiv')
+			.style('left',(params.windowWidth - 2.*useInfoWidth  - 5) +'px')
+			.style('padding-left',(params.controlWidth+5)+'px')
+			.style('width',2.*useInfoWidth + 'px')
+			.style('height',params.infoHeight + 'px')
+			.classed('hidden',!params.showingTraining)
+
+
+
+		//reload the images
+		if (params.imagesAvail.length > 0){
+			loadAllImages(params.imagesAvail);
+		}
 	}
-
-	var iLeft = params.windowWidth - useInfoWidth - 5;
-	if (params.showingMenu){
-		iLeft -= params.menuWidth;
-	}
-	d3.select('#imageDiv')
-		.style('left',(-1.*params.imgI*params.windowWidth)+'px')
-		.style('width',params.imageWidth + 'px')
-		.style('height',params.imageHeight + 'px')	
-
-	d3.select('#infoDiv')
-		.style('left',iLeft +'px')
-		.style('height',params.infoHeight + 'px')
-		.style('width',useInfoWidth + 'px')
-
-
-	d3.select('#controlDiv')
-		.style('left',(iLeft - params.controlWidth) +'px')
-		.style('width',params.controlWidth + 'px')
-		.style('height',params.windowHeight + 'px')
-
-	d3.select('#controlDivText')
-		.style('left',params.controlWidth/2 - 5 + 'px')
-		.style('top',params.windowHeight/2. -20 + 'px')	
-
-	d3.select('#objectMenu')
-		.style('left',params.menuLeft + 'px')
-		.style('width',params.menuWidth - 4 + 'px')//to account for 2px border
-		.style('height',params.windowHeight - 4 + 'px')//to account for 2px border
-
-	d3.select('#objectMenu').selectAll('.buttonDiv')
-		.style('width',params.menuWidth-40 + 'px')
-
-	d3.select('#trainingDiv')
-		.style('left',(params.windowWidth - 2.*useInfoWidth  - 5) +'px')
-		.style('padding-left',(params.controlWidth+5)+'px')
-		.style('width',2.*useInfoWidth + 'px')
-		.style('height',params.infoHeight + 'px')
-		.classed('hidden',!params.showingTraining)
-
-
-
-	//reload the images
-	if (params.imagesAvail.length > 0){
-		loadAllImages(params.imagesAvail);
-	}
-
 }
 
 
@@ -101,10 +103,13 @@ function resizeDivs(){
 
 function gotoFullscreen(){
 	fullscreen(true)
-	setTimeout(function(){
-		resizeCanvas()
+	params.resizing = true;
+	if (params.showingMenu){ //something breaks when this is open... not sure why
+		showHideMenu();
+	}
+	setTimeout(function(){//would prefer a callback from fullscreen...
+		params.resizing = false;
 		resizeDivs();		
-	}, 1000)
+	}, 500)
 
-	//setTimeout(resizeCanvas(), 1000) //would prefer a callback from fullscreen...
 }

@@ -71,7 +71,7 @@ function preload(){
 
 	d3.select('#controlDivText')
 		.style('position','absolute')
-		.style('transform','rotate(90deg)')
+		//.style('transform','rotate(90deg)')
 
 	d3.select('#objectMenu')
 		.style('position','absolute')

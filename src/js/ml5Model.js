@@ -209,8 +209,7 @@ function populateTrainingDiv(){
 		.style('margin-top','30px')
 		.text('Done')
 		.on('click', function(e){
-			params.doClassify = true;
-			d3.select('#infoDiv').classed('hidden',false)
+			resetInfo();
 			d3.select('#trainingDiv').classed('hidden',true)
 			d3.select('#trainingButton').classed('buttonDivActive', false);
 

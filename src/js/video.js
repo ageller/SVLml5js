@@ -56,84 +56,100 @@ function applyOpenCVmaskToP5(mask){
 function resetCanvas(){
 
 
-	var vW = d3.select('#videoWrapper');
-	var vD = d3.select('#videoDiv');
-	//clip and center so that I can switch between full screen and not
+	params.videoTransDone = 0;
+	if (!params.resizing){
+		params.resizing = true;
+		var vW = d3.select('#videoWrapper');
+		var vD = d3.select('#videoDiv');
+		//clip and center so that I can switch between full screen and not
 
-	vW.style('width',params.videoOuterWidth*params.shrink)
-		.style('height', params.videoOuterHeight*params.shrink)
+		vW.style('width',params.videoOuterWidth*params.shrink)
+			.style('height', params.videoOuterHeight*params.shrink)
 
-	vD.style('width',params.videoWidth*params.shrink + 'px')
-		.style('height',params.videoHeight*params.shrink + 'px')	
-		.style('transform','scale('+params.videoFac+')')
+		vD.style('width',params.videoWidth*params.shrink + 'px')
+			.style('height',params.videoHeight*params.shrink + 'px')	
+			.style('transform','scale('+params.videoFac+')')
 
-	vW.style('clip', 'rect(0px,'+params.videoWidth*params.videoFac*params.shrink+'px,'+params.windowHeight*params.shrink+'px, 0px)');
+		vW.style('clip', 'rect(0px,'+params.videoWidth*params.videoFac*params.shrink+'px,'+params.windowHeight*params.shrink+'px, 0px)');
 
-	//video element for OpenCV
-	if (params.openCVvideo == null){
-		initializeOpenCV(params.videoWidth, params.videoHeight);
-	}
+		//video element for OpenCV
+		if (params.openCVvideo == null){
+			initializeOpenCV(params.videoWidth, params.videoHeight);
+		}
 
-	//canvas
-	cvs = d3.select('canvas');
-	if (params.canvas == null){
-		pixelDensity(1); //need this or else the pixel density is 2 by default (!), and confuses things (and slows down)
-		params.video = createCapture(VIDEO);
-		params.video.size(params.videoWidth, params.videoHeight)
-		params.video.hide();
-		// params.videoShow = createCapture(videoConstraints, function(stream) {
-		// 	console.log(stream);
-		//  });
-		params.videoShow = createCapture(VIDEO);
-		params.videoShow.size(params.videoWidth, params.videoHeight)
-		params.videoShow.hide();	
-
-
-
-		params.canvas = createCanvas(params.videoWidth, params.videoHeight).parent(select('#videoDiv'));
+		//canvas
 		cvs = d3.select('canvas');
-		cvs.classed('bordered', false);
-	} 
-
-	if (params.canvas != null && params.readyVideo) { //this is needed for background subtraction, but breaks transitions!
-		resizeCanvas(params.videoWidth, params.videoHeight);
-	}
-
-	var left = 0;
-	if (params.videoWidth < params.windowWidth) {
-		left = (params.windowWidth - params.videoWidth)/2.; //don't understand this /2??
-	}
-	var top = 0;
-	if (params.videoHeight < params.windowHeight) {
-		top = (params.windowHeight - params.videoHeight)/2.; //don't understand this /2??
-	}	
-	cvs.classed('bordered', false)
-		.attr('width',params.videoWidth)
-		.attr('height',params.videoHeight)
-	cvs.transition(params.tTrans)
-		.style('width',params.videoWidth*params.shrink+'px')
-		.style('height',params.videoHeight*params.shrink+'px');	
+		if (params.canvas == null){
+			pixelDensity(1); //need this or else the pixel density is 2 by default (!), and confuses things (and slows down)
+			params.video = createCapture(VIDEO);
+			params.video.size(params.videoWidth, params.videoHeight)
+			params.video.hide();
+			// params.videoShow = createCapture(videoConstraints, function(stream) {
+			// 	console.log(stream);
+			//  });
+			params.videoShow = createCapture(VIDEO);
+			params.videoShow.size(params.videoWidth, params.videoHeight)
+			params.videoShow.hide();	
 
 
-	//videoDiv
-	vW.transition(params.tTrans)
-		.style('width',params.videoOuterWidth*params.shrink+'px')
-		.style('height',params.videoOuterHeight*params.shrink+'px')
-	vD.transition(params.tTrans)
-		.style('width',params.videoWidth*params.shrink+'px')
-		.style('height',params.videoHeight*params.shrink+'px')
-		.style('margin-left', left*params.shrink+'px')
-		.style('margin-top', top*params.shrink+'px')
+
+			params.canvas = createCanvas(params.videoWidth, params.videoHeight).parent(select('#videoDiv'));
+			cvs = d3.select('canvas');
+			cvs.classed('bordered', false);
+		} 
+
+		if (params.canvas != null && params.readyVideo) { //this is needed for background subtraction, but breaks transitions!
+			resizeCanvas(params.videoWidth, params.videoHeight);
+		}
+
+		var left = 0;
+		if (params.videoWidth < params.windowWidth) {
+			left = (params.windowWidth - params.videoWidth)/2.; //don't understand this /2??
+		}
+		var top = 0;
+		if (params.videoHeight < params.windowHeight) {
+			top = (params.windowHeight - params.videoHeight)/2.; //don't understand this /2??
+		}	
+		cvs.classed('bordered', false)
+			.attr('width',params.videoWidth)
+			.attr('height',params.videoHeight)
+		cvs.transition(params.tTrans)
+			.style('width',params.videoWidth*params.shrink+'px')
+			.style('height',params.videoHeight*params.shrink+'px')
+			.on("end", function(){params.videoTransDone += 1});
 
 
-	if (params.shrink == 1.){
+		//videoDiv
 		vW.transition(params.tTrans)
-			.style('top','0px')
-			.style('left','0px');
-	} else {
-		vW.transition(params.tTrans)
-			.style('top','10px')
-			.style('left','10px');
+			.style('width',params.videoOuterWidth*params.shrink+'px')
+			.style('height',params.videoOuterHeight*params.shrink+'px')
+			.on("end", function(){params.videoTransDone += 1});
+		vD.transition(params.tTrans)
+			.style('width',params.videoWidth*params.shrink+'px')
+			.style('height',params.videoHeight*params.shrink+'px')
+			.style('margin-left', left*params.shrink+'px')
+			.style('margin-top', top*params.shrink+'px')
+			.on("end", function(){params.videoTransDone += 1});
+
+		if (params.shrink == 1.){
+			vW.transition(params.tTrans)
+				.style('top','0px')
+				.style('left','0px')
+				.on("end", function(){params.videoTransDone += 1});
+		} else {
+			vW.transition(params.tTrans)
+				.style('top','10px')
+				.style('left','10px')
+				.on("end", function(){params.videoTransDone += 1});
+
+		}
+
+		var check = setInterval(function(){ //wait for all transitions from video until doing this again
+			if (params.videoTransDone >= 3) {
+				params.resizing = false;
+				clearInterval(check);
+			}
+		});
 
 	}
 	// console.log("aspect", parseFloat(params.canvas.style('height'))/parseFloat(params.canvas.style('width')), params.aspect, params.canvas.style('height'), window.innerHeight)

@@ -61,6 +61,14 @@ html, body {
 	transform: rotate(45deg) translate(-6px, -4px);
 }
 
+.dot {
+	height: 8px;
+	width: 8px;
+	margin-top:2px;
+	background-color: black;
+	border-radius: 50%;
+	display: inline-block;
+}
 .menuButton{
 	position:absolute;
 	width:28px;
