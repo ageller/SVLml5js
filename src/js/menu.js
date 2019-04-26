@@ -70,14 +70,19 @@ function populateMenu(data){
 		.style('font-size','16px')
 		.text('Update Model Training')
 		.on('click', function(e){
-			//params.loadingImagesToModel = true;
-			//addImageToModel();
+			//load a blank model and add back in all the training images
+			loadEmptyModel();
+			params.loadingImagesToModel = true;
+			params.addNextImageToModel = true;
+			params.trainingImageI = 0;
+
 			resetInfo();
 			params.showingTraining = !params.showingTraining;
 			params.doClassify = !params.showingTraining;
 			elem = d3.select('#trainingButton')
 			elem.classed('buttonDivActive', params.showingTraining);
 			d3.select('#infoDiv').classed('hidden',params.showingTraining)
+			d3.select('#controlDiv').classed('hidden',params.showingTraining)
 			d3.select('#trainingDiv').classed('hidden',!params.showingTraining)
 			if (params.showingTraining){
 				params.label = 'training'
@@ -188,25 +193,21 @@ function showHideMenu(){
 
 	d3.select('#showMenuButton').node().classList.toggle("change");
 	var useInfoWidth = params.infoWidth
-	var pLeft = parseFloat(d3.select('#controlDiv').style('width')) + 5;
 	if (params.showingMenu){
 		params.menuLeft = params.windowWidth - params.menuWidth;
-		useInfoWidth -= params.menuWidth
-		//pLeft = 0;
+		useInfoWidth = Math.max(useInfoWidth - params.menuWidth, 0);
 		d3.select('#infoDiv').transition(params.tTrans)
 			.style('width',useInfoWidth + 'px')
 			.on('end',function(){
 				if (useInfoWidth <= 0){
 					d3.select('#infoDiv')
 						.classed('notScrollable', params.showingMenu)
-						.style('padding-left',pLeft +'px')
 				}
 			})
 	} else {
 		params.menuLeft = params.windowWidth;
 		d3.select('#infoDiv')
 			.classed('notScrollable', params.showingMenu)
-			.style('padding-left',pLeft +'px')
 			.transition(params.tTrans).style('width',useInfoWidth + 'px')
 
 	}

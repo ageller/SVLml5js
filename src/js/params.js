@@ -16,6 +16,8 @@ function defineParams(){
 		this.resultsReady = true;
 		this.confidenceLim = 0.99; //limit before object is considered identified.
 		this.loadingImagesToModel = false; //will be true if we are reloading images into the model
+		this.trainingImageI = 0;//counter for the trainingImageList
+		this.addNextImageToModel = false; //check to see if the image is done being added to the model
 
 		//related to the p5js video
     	this.video = null; //holds the p5js video object that we use to classify (can use background sub)
@@ -72,7 +74,7 @@ function defineParams(){
 		this.menuLeft;
 		this.showingMenu = false;
 
-		this.controlWidth = 15;// pixels width of the small controls div on the side of infoDiv
+		this.controlWidth = 20;// pixels width of the small controls div on the side of infoDiv
 
 		//window size (will be rest if resized)
 		this.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);

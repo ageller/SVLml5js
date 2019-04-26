@@ -4,10 +4,6 @@ function showCaption(cap){
 	if (cap != null){
 		x.html('<span class="highlighted"> Image Caption: </span>'+cap)
 		x.selectAll('a').on('click', function(){return false}); //don't allow links
-		//also resize the control Div
-		d3.select('#controlDiv').style('height',windowHeight); //default (do this first, or else we don't get correct height for infoDiv)
-		d3.select('#controlDiv').style('height',d3.select('#infoDiv').node().scrollHeight); //in case we need to extend it
-
 	}
 }
 
@@ -43,6 +39,9 @@ function loadAllImages(images){
 				i.style('top',-offset+'px')
 				if (h > h2){
 					i.style('margin-top',(h-h2)/2. + 'px')
+				}
+				if (index == 0){
+					showCaption(params.captionsAvail[index]);
 				}
 
 			})
@@ -82,16 +81,18 @@ function slideImageDivMoved(){
 			// var s = Math.sign(diffX/dt);
 			// params.dragImageVx = s*Math.max(Math.abs(params.dragImageVx),Math.abs(diffX/dt));
 			var left = parseFloat(d3.select('#imageDiv').style('left'));
-			var top = parseFloat(params.allImageDivs[params.imgI].style('top'));
-			var hi = parseFloat(params.allImageDivs[params.imgI].attr('height'))
-			var newTop = Math.max(Math.min(top+diffY, 0), params.windowHeight - hi);
+			if (params.allImageDivs[params.imgI]){
+				var top = parseFloat(params.allImageDivs[params.imgI].style('top'));
+				var hi = parseFloat(params.allImageDivs[params.imgI].attr('height'))
+				var newTop = Math.max(Math.min(top+diffY, 0), params.windowHeight - hi);
 
-			//console.log('testing3', x1, x2, dt, diffX, diffY, top, newTop, left, params.dragImageVx, params.dragImageSamples, hi)
-			//console.log('testing3', y1, y2, diffY, top, newTop, hi, params.windowHeight)
+				//console.log('testing3', x1, x2, dt, diffX, diffY, top, newTop, left, params.dragImageVx, params.dragImageSamples, hi)
+				//console.log('testing3', y1, y2, diffY, top, newTop, hi, params.windowHeight)
 
-			d3.select('#imageDiv')
-				.style('left', (left+diffX)+'px')
-			params.allImageDivs[params.imgI].style('top', newTop+'px')
+				d3.select('#imageDiv')
+					.style('left', (left+diffX)+'px')
+				params.allImageDivs[params.imgI].style('top', newTop+'px')
+			}
 		}
 	}
 }

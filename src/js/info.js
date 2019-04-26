@@ -15,6 +15,7 @@ function resetInfo(){
 	d3.select('#imageCaption').html('')
 
 	d3.select('#infoDiv').classed('hidden',true)
+	d3.select('#controlDiv').classed('hidden',true)
 	params.doClassify = true;
 }
 
@@ -27,6 +28,7 @@ function updateInfo(obj){
 
 	var iDiv = d3.select('#infoDiv')
 	iDiv.classed('hidden',false)
+	d3.select('#controlDiv').classed('hidden',false)
 
 	id = Object.keys(obj)[0]
 	if (obj.hasOwnProperty(id)){
@@ -67,7 +69,6 @@ function updateInfo(obj){
 			params.captionsAvail = obj[id]['captions'];
 			console.log("N images for",id,params.imagesAvail.length)
 			loadAllImages(params.imagesAvail);
-			showCaption(params.captionsAvail[0]);
 		}
 	}
 	d3.select('#wikipedia').selectAll('span').remove()
@@ -96,6 +97,7 @@ function parseRGBA(input){
 }
 function resizeInfoDivStarted(){
 	params.infoDivControlsActive = true;
+	d3.event.preventDefault();
 }
 function resizeInfoDivMoved(){
 	if (params.infoDivControlsActive){
@@ -124,10 +126,11 @@ function resizeInfoDivMoved(){
 			var alpha = parseFloat(m[3])+dirY*0.02;
 			alpha = Math.min(Math.max(alpha,0.01),0.99);
 
-			var useLeft = Math.min(left+diffX, params.menuLeft-params.controlWidth-5);
+			var useLeft = Math.min(left+diffX, params.menuLeft-5);
 
-			var useInfoWidth = (width-diffX);
+			var useInfoWidth = Math.max(width-diffX,0);
 			params.infoWidth = useInfoWidth;
+
 			if (params.showingMenu){
 				params.infoWidth = useInfoWidth + params.menuWidth;
 			}
@@ -139,7 +142,8 @@ function resizeInfoDivMoved(){
 				.style('background-color','rgba('+m[0]+','+m[1]+','+m[2]+','+alpha+')')
 			d3.select('#trainingDiv')
 				.style('background-color','rgba('+m[0]+','+m[1]+','+m[2]+','+alpha+')')
-				
+			d3.select('#controlDiv').style('left',useLeft - params.controlWidth +'px')
+
 			if (useInfoWidth > 2.*params.controlWidth){
 				d3.select('#infoDiv').classed('notScrollable', false);
 			} else {

@@ -42,10 +42,18 @@ function loadSavedModel(){
 		console.log("Number of classes", params.featureExtractor.numClasses);
 		resetTrainingText("Model Loaded");
 
-		
-
 	});
 
+}
+
+function loadEmptyModel(){
+	params.readyModel = false;
+	console.log('Loading Empty Model ...')
+	resetTrainingText("Loading Empty Model ...");
+	params.featureExtractor = null;
+	params.classifier = null;
+	params.doClassify = false;
+	initializeML(numClasses = params.numObjects, empty = true);
 }
 
 // Get a prediction for the current video frame
@@ -137,11 +145,7 @@ function populateTrainingDiv(){
 		.attr('class','buttonDiv training')
 		.text('Load New Empty Model')
 		.on('click', function(e){
-			params.featureExtractor = null;
-			params.classifier = null;
-			params.doClassify = false;
-			resetTrainingText("Loading Empty Model ...");
-			initializeML(numClasses = params.numObjects, empty = true);
+			loadEmptyModel();
 		})
 
 	d.append('div')
@@ -219,44 +223,49 @@ function populateTrainingDiv(){
 //If I want to retrain with new images and also keep the old model, I think that I need to load a blank model and add in all the old images, then add the new ones, then train
 function addImageToModel(){
 
-	params.trainingImageList.forEach(function(d, imgI){
-		var path = d.fileName
-		var p1 = path.lastIndexOf('_')
-		var id = path.slice(0,p1);
-		var p2 = id.lastIndexOf('_')
-		var p3 = id.lastIndexOf('/')+1
-		id = id.slice(p3,p2)
-		var img = loadImage(path, function(){
-			//rescale to the video size (does this work?)
-			var vAspect = params.videoWidth/params.videoHeight;
-			var iAspect = img.width/img.height;
-			var newiHeight = params.videoWidth/iAspect;
-			//console.log("aspects, newiHeight", vAspect, iAspect, newiHeight);
-			if (newiHeight >= params.videoHeight){
-				img.resize(params.videoWidth, 0)
-			} else {
-				img.resize(0, params.videoHeight)
-			}
-			params.video.loadPixels();
-			img.loadPixels();
-			console.log(path, id, img, img.pixels.length, pixels.length)
-			//replace the video pixels with this image
-			//https://www.youtube.com/watch?v=nMUMZ5YRxHI
-			for (x=0; x<params.videoWidth; x++) {
-				for (y=0; y<params.videoHeight; y++) {
-					var index = (x + y*params.videoWidth)*4; //p5js pixel location
-					for (k=0; k<4; k++) {
-						pixels[index + k] = img.pixels[index + k]; 
-					}
+	var d = params.trainingImageList[params.trainingImageI]
+	var path = d.fileName
+	var p1 = path.lastIndexOf('_')
+	var id = path.slice(0,p1);
+	var p2 = id.lastIndexOf('_')
+	var p3 = id.lastIndexOf('/')+1
+	id = id.slice(p3,p2)
+	var img = loadImage(path, function(){
+		//rescale to the video size (does this work?)
+		var vAspect = params.videoWidth/params.videoHeight;
+		var iAspect = img.width/img.height;
+		var newiHeight = params.videoWidth/iAspect;
+		//console.log("aspects, newiHeight", vAspect, iAspect, newiHeight);
+		if (newiHeight >= params.videoHeight){
+			img.resize(params.videoWidth, 0)
+		} else {
+			img.resize(0, params.videoHeight)
+		}
+		params.video.loadPixels();
+		img.loadPixels();
+		console.log(params.trainingImageI, path, id, img, img.pixels.length, pixels.length)
+		//replace the video pixels with this image
+		//https://www.youtube.com/watch?v=nMUMZ5YRxHI
+		for (x=0; x<params.videoWidth; x++) {
+			for (y=0; y<params.videoHeight; y++) {
+				var index = (x + y*params.videoWidth)*4; //p5js pixel location
+				for (k=0; k<4; k++) {
+					pixels[index + k] = img.pixels[index + k]; 
 				}
 			}
-			params.video.updatePixels();
-			//console.log('loaded image', id, img);
-			params.classifier.addImage(id);	
-			if (imgI == params.trainingImageList.length){
-				params.loadingImagesToModel = false
-			}
-		});
+		}
+		params.video.updatePixels();
+		//console.log('loaded image', id, img);
+		params.classifier.addImage(id);	
+		
+		params.trainingImageI += 1;
+		params.addNextImageToModel = true;
+		d3.select('#trainingNumber').text(params.classifier.mapStringToIndex.length);
+
+		if (params.trainingImageI == params.trainingImageList.length){
+			params.loadingImagesToModel = false
+			params.addNextImageToModel = false;
+		}
 	});
 
 }
@@ -279,8 +288,10 @@ function updateTraining(obj){
 					console.log(id)
 					params.classifier.addImage(id);
 					//var fname = id.replace(/\s/g,'') + '_'+inum+'_';
-					var fname = id + '_'+inum+'_';
-					//saveFrames(fname, 'png', 1, 1);
+					if (id != 'Blank'){
+						var fname = id + '_'+inum+'_';
+						saveFrames(fname, 'png', 1, 1);
+					}
 					inum += 1;
 					if (!recording){
 						d3.select('#trainingNumber').text(params.classifier.mapStringToIndex.length);
