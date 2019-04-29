@@ -223,49 +223,58 @@ function populateTrainingDiv(){
 function addImageToModel(){
 
 	var d = params.trainingImageList[params.trainingImageI]
-	var path = d.fileName
-	var p1 = path.lastIndexOf('_')
-	var id = path.slice(0,p1);
-	var p2 = id.lastIndexOf('_')
-	var p3 = id.lastIndexOf('/')+1
-	id = id.slice(p3,p2)
-	var img = loadImage(path, function(){
-		//rescale to the video size (does this work?)
-		var vAspect = params.videoWidth/params.videoHeight;
-		var iAspect = img.width/img.height;
-		var newiHeight = params.videoWidth/iAspect;
-		//console.log("aspects, newiHeight", vAspect, iAspect, newiHeight);
-		if (newiHeight >= params.videoHeight){
-			img.resize(params.videoWidth, 0)
-		} else {
-			img.resize(0, params.videoHeight)
-		}
-		params.video.loadPixels();
-		img.loadPixels();
-		console.log(params.trainingImageI, path, id, img, img.pixels.length, pixels.length)
-		//replace the video pixels with this image
-		//https://www.youtube.com/watch?v=nMUMZ5YRxHI
-		for (x=0; x<params.videoWidth; x++) {
-			for (y=0; y<params.videoHeight; y++) {
-				var index = (x + y*params.videoWidth)*4; //p5js pixel location
-				for (k=0; k<4; k++) {
-					pixels[index + k] = img.pixels[index + k]; 
+	if (d != null){
+		var path = d.fileName
+		var p1 = path.lastIndexOf('_')
+		var id = path.slice(0,p1);
+		var p2 = id.lastIndexOf('_')
+		var p3 = id.lastIndexOf('/')+1
+		id = id.slice(p3,p2)
+		var img = loadImage(path, function(){
+			//rescale to the video size (does this work?)
+			var vAspect = params.videoWidth/params.videoHeight;
+			var iAspect = img.width/img.height;
+			var newiHeight = params.videoWidth/iAspect;
+			//console.log("aspects, newiHeight", vAspect, iAspect, newiHeight);
+			if (newiHeight >= params.videoHeight){
+				img.resize(params.videoWidth, 0)
+			} else {
+				img.resize(0, params.videoHeight)
+			}
+			params.video.loadPixels();
+			img.loadPixels();
+			console.log(params.trainingImageI, path, id, img, img.pixels.length, pixels.length)
+			//replace the video pixels with this image
+			//https://www.youtube.com/watch?v=nMUMZ5YRxHI
+			for (x=0; x<params.videoWidth; x++) {
+				for (y=0; y<params.videoHeight; y++) {
+					var indexV = (x + y*params.videoWidth)*4; //p5js video location
+					var indexI = (params.videoWidth-x + y*params.videoWidth)*4; //p5js image location (I'm flipping the video!)
+					for (k=0; k<4; k++) {
+						pixels[indexV + k] = img.pixels[indexI + k]; 
+					}
+				}
+				if (x >= params.videoWidth-1 && y >= params.videoHeight-1 && k >=3){ //do I need to worry about async here?
+					params.video.updatePixels();
+					//console.log('loaded image', id, img);
+					params.classifier.addImage(id);	
+					
+					params.trainingImageI += 1;
+					params.addNextImageToModel = true;
+					d3.select('#trainingNumber').text(params.classifier.mapStringToIndex.length);
+
+					if (params.trainingImageI == params.trainingImageList.length){
+						params.loadingImagesToModel = false
+						params.addNextImageToModel = false;
+					}
 				}
 			}
-		}
-		params.video.updatePixels();
-		//console.log('loaded image', id, img);
-		params.classifier.addImage(id);	
-		
-		params.trainingImageI += 1;
-		params.addNextImageToModel = true;
-		d3.select('#trainingNumber').text(params.classifier.mapStringToIndex.length);
 
-		if (params.trainingImageI == params.trainingImageList.length){
-			params.loadingImagesToModel = false
-			params.addNextImageToModel = false;
-		}
-	});
+		});
+	} else {
+		params.loadingImagesToModel = false
+		params.addNextImageToModel = false;		
+	}
 
 }
 
