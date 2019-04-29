@@ -3,7 +3,7 @@ function initializeML(numClasses=null, empty=false, interval=10){
 		if (typeof ml5.featureExtractor != "undefined") {
 			clearInterval(check);
 			// Extract the already learned features from MobileNet (eventually we want to only use our own training set)
-			if (params.featureExtractor == null){
+			if (params.featureExtractor == null || empty){
 				params.featureExtractor = ml5.featureExtractor('MobileNet', modelReady);
 			} else {
 				numClasses += params.featureExtractor.numClasses;
@@ -50,8 +50,8 @@ function loadEmptyModel(){
 	params.readyModel = false;
 	console.log('Loading Empty Model ...')
 	resetTrainingText("Loading Empty Model ...");
-	params.featureExtractor = null;
-	params.classifier = null;
+//	params.featureExtractor = null;
+//	params.classifier = null;
 	params.doClassify = false;
 	initializeML(numClasses = params.numObjects, empty = true);
 }

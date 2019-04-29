@@ -153,7 +153,7 @@ function draw() {
 		image(params.videoShow, 0, 0, params.videoWidth, params.videoHeight);// 
 	}
 	//do the classification?
-	if (params.readyModel && params.readyVideo && params.doClassify && !params.initialCapture){ 
+	if (params.readyModel && params.readyVideo && params.doClassify && !params.initialCapture && !params.loadingImagesToModel){ 
 		classify();
 	} 
 
