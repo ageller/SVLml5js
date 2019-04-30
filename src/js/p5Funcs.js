@@ -112,7 +112,6 @@ function setup(){
 function draw() {
 	background(0);
 
-
 	//allow some time to get the background settled
 	if (params.iBackground < params.nBackground){
 		if (params.readyVideo && params.readyOpenCV){
@@ -121,6 +120,12 @@ function draw() {
 		}
 	} else {
 		params.initialCapture = false;
+	}
+
+	//for training
+	if (params.loadingImagesToModel && params.addNextImageToModel && params.readyModel && params.readyVideo){
+		params.video.pause();
+		addImageToModel();
 	}
 
 	//for background subtraction
@@ -135,10 +140,7 @@ function draw() {
 
 	}
 
-	if (params.loadingImagesToModel && params.addNextImageToModel && params.readyModel){
-		params.addNextImageToModel = false;
-		addImageToModel();
-	}
+
 	// Flip the canvas so that we get a mirror image
 	//and seems like I need to scale this by 0.5 to see the full image?? something is wrong here.
 	var fac = 1.0
@@ -146,12 +148,12 @@ function draw() {
 	scale(-fac, fac);
 	//scale(-1.0,1.0);    // flip x-axis backwards
 
-
 	if (params.showBackgroundSubtractedVideo || params.showingTraining){
 		image(params.video, 0, 0, params.videoWidth, params.videoHeight);// 
 	} else {
 		image(params.videoShow, 0, 0, params.videoWidth, params.videoHeight);// 
 	}
+
 	//do the classification?
 	if (params.readyModel && params.readyVideo && params.doClassify && !params.initialCapture && !params.loadingImagesToModel){ 
 		classify();

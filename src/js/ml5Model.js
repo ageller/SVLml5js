@@ -50,8 +50,8 @@ function loadEmptyModel(){
 	params.readyModel = false;
 	console.log('Loading Empty Model ...')
 	resetTrainingText("Loading Empty Model ...");
-//	params.featureExtractor = null;
-//	params.classifier = null;
+	params.featureExtractor = null;
+	params.classifier = null;
 	params.doClassify = false;
 	initializeML(numClasses = params.numObjects, empty = true);
 }
@@ -87,8 +87,6 @@ function findObject(name){
 // Show the results
 function gotResults(err, results) {
 
-
-
 	params.resultsReady = false;
 	foundObject = null;
 	//need something in here to check if the result is finalized
@@ -100,7 +98,7 @@ function gotResults(err, results) {
 		params.resultsReady = true;
 	}
 	if (results && results[0]) {
-		console.log("err, results[0]", err, results[0])
+		console.log("err, results[0]", err, results[0], results)
 		params.label = results[0].label;
 		confidence = results[0].confidence;
 		if (confidence > params.confidenceLim){
@@ -220,8 +218,39 @@ function populateTrainingDiv(){
 }
 
 //If I want to retrain with new images and also keep the old model, I think that I need to load a blank model and add in all the old images, then add the new ones, then train
-function addImageToModel(){
+function replaceVideoPixels(img){
+	//https://www.youtube.com/watch?v=nMUMZ5YRxHI
+	console.log('replacing pixels', img, img.pixels.length)
+	for (x=0; x<params.videoWidth; x++) {
+		for (y=0; y<params.videoHeight; y++) {
+			var indexV = (x + y*params.videoWidth)*4; //p5js video location
+			var indexI = (params.videoWidth-x + y*params.videoWidth)*4; //p5js image location (I'm flipping the video!)
+			for (k=0; k<4; k++) {
+				pixels[indexV + k] = img.pixels[indexI + k]; 
+			}
+		}
+		if (x >= params.videoWidth-1 && y >= params.videoHeight-1 && k >=3){ //do I need to worry about async here?
+			params.video.updatePixels();
+			//console.log('loaded image', id, img);
+			// image(params.video, 0, 0, params.videoWidth, params.videoHeight);// 
+			// params.classifier.addImage(params.trainingImageID);	
+			params.trainingImageI += 1;
+			params.addNextImageToModel = true;
+			d3.select('#trainingNumber').text(params.classifier.mapStringToIndex.length);
+			image(params.video, 0, 0, params.videoWidth, params.videoHeight);
+			params.classifier.addImage(params.trainingImageID);	
+			
+			if (params.trainingImageI >= params.trainingImageList.length){
+				params.loadingImagesToModel = false
+				params.addNextImageToModel = false;
+			}
 
+		}
+	}
+}
+
+function addImageToModel(){
+	params.addNextImageToModel = false;
 	var d = params.trainingImageList[params.trainingImageI]
 	if (d != null){
 		var path = d.fileName
@@ -229,49 +258,29 @@ function addImageToModel(){
 		var id = path.slice(0,p1);
 		var p2 = id.lastIndexOf('_')
 		var p3 = id.lastIndexOf('/')+1
-		id = id.slice(p3,p2)
+		params.trainingImageID = id.slice(p3,p2)
 		var img = loadImage(path, function(){
+			params.trainingImage = img;
 			//rescale to the video size (does this work?)
 			var vAspect = params.videoWidth/params.videoHeight;
-			var iAspect = img.width/img.height;
+			var iAspect = params.trainingImage.width/params.trainingImage.height;
 			var newiHeight = params.videoWidth/iAspect;
 			//console.log("aspects, newiHeight", vAspect, iAspect, newiHeight);
 			if (newiHeight >= params.videoHeight){
-				img.resize(params.videoWidth, 0)
+				params.trainingImage.resize(params.videoWidth, 0)
 			} else {
-				img.resize(0, params.videoHeight)
+				params.trainingImage.resize(0, params.videoHeight)
 			}
 			params.video.loadPixels();
-			img.loadPixels();
-			console.log(params.trainingImageI, path, id, img, img.pixels.length, pixels.length)
+			params.trainingImage.loadPixels();
+			console.log(params.trainingImageI, path, params.trainingImageID, params.trainingImage, params.trainingImage.pixels.length, pixels.length)
+			
 			//replace the video pixels with this image
-			//https://www.youtube.com/watch?v=nMUMZ5YRxHI
-			for (x=0; x<params.videoWidth; x++) {
-				for (y=0; y<params.videoHeight; y++) {
-					var indexV = (x + y*params.videoWidth)*4; //p5js video location
-					var indexI = (params.videoWidth-x + y*params.videoWidth)*4; //p5js image location (I'm flipping the video!)
-					for (k=0; k<4; k++) {
-						pixels[indexV + k] = img.pixels[indexI + k]; 
-					}
-				}
-				if (x >= params.videoWidth-1 && y >= params.videoHeight-1 && k >=3){ //do I need to worry about async here?
-					params.video.updatePixels();
-					//console.log('loaded image', id, img);
-					params.classifier.addImage(id);	
-					
-					params.trainingImageI += 1;
-					params.addNextImageToModel = true;
-					d3.select('#trainingNumber').text(params.classifier.mapStringToIndex.length);
-
-					if (params.trainingImageI == params.trainingImageList.length){
-						params.loadingImagesToModel = false
-						params.addNextImageToModel = false;
-					}
-				}
-			}
+			replaceVideoPixels(params.trainingImage);
 
 		});
 	} else {
+		console.log('WARNING, no training image', d)
 		params.loadingImagesToModel = false
 		params.addNextImageToModel = false;		
 	}

@@ -89,7 +89,8 @@ function resetCanvas(){
 			//  });
 			params.videoShow = createCapture(VIDEO);
 			params.videoShow.size(params.videoWidth, params.videoHeight)
-			params.videoShow.hide();	
+			params.videoShow.hide();
+
 
 
 
