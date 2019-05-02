@@ -20,7 +20,7 @@ function initializeOpenCV(w,h, interval = 10){
 				.classed('hidden', true)
 			params.openCVvideo = document.getElementById("videoInput"); // video is the id of video tag
 			params.openCVcap = new cv.VideoCapture(params.openCVvideo);	
-			navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+			navigator.mediaDevices.getUserMedia(params.videoConstraints)//{ video: true, audio: false })
 				.then(function(stream) {
 					params.openCVvideo.srcObject = stream;
 					params.openCVvideo.play();
@@ -81,13 +81,12 @@ function resetCanvas(){
 		cvs = d3.select('canvas');
 		if (params.canvas == null){
 			pixelDensity(1); //need this or else the pixel density is 2 by default (!), and confuses things (and slows down)
-			params.video = createCapture(VIDEO);
+			params.video = createCapture(params.videoConstraints)
+ 			//params.video = createCapture(VIDEO);
 			params.video.size(params.videoWidth, params.videoHeight)
 			params.video.hide();
-			// params.videoShow = createCapture(videoConstraints, function(stream) {
-			// 	console.log(stream);
-			//  });
-			params.videoShow = createCapture(VIDEO);
+			params.videoShow = createCapture(params.videoConstraints)
+			//params.videoShow = createCapture(VIDEO);
 			params.videoShow.size(params.videoWidth, params.videoHeight)
 			params.videoShow.hide();
 

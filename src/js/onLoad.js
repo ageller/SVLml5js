@@ -95,20 +95,16 @@ Promise.all([
 // 	})
 
 //list available devices
-// if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-//   console.log("enumerateDevices() not supported.");
-// }
-
-// // List cameras and microphones.
-
-// navigator.mediaDevices.enumerateDevices()
-// .then(function(devices) {
-//   devices.forEach(function(device) {
-//     console.log(device.kind + ": " + device.label +
-//                 " id = " + device.deviceId);
-//   });
-// })
-// .catch(function(err) {
-//   console.log(err.name + ": " + err.message);
-// });
-
+if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+	console.log("enumerateDevices() not supported.");
+} else {
+	navigator.mediaDevices.enumerateDevices()
+		.then(function(devices) {
+			devices.forEach(function(device) {
+				console.log(device.kind + ": " + device.label + " id = " + device.deviceId);
+			});
+		})
+		.catch(function(err) {
+			console.log(err.name + ": " + err.message);
+	});
+}

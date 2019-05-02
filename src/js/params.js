@@ -45,20 +45,19 @@ function defineParams(){
 		this.shrink = 1.0; //fraction to shrink down the video when showing image (set to 0.2 below)
 
 		// could use something like this for finer control over the video
-		// this.videoConstraints = {
-		// 	video: {
-		// 		deviceId: "e2d1e7a1022f08a4ab3131ad8b24696ed535c298c08925c16f964da208f352a9",
-		// 		// width: { min: 1280 },
-		// 		// height: { min: 720 },
-		// 		// mandatory: {
-		// 		// 	deviceId: "e2d1e7a1022f08a4ab3131ad8b24696ed535c298c08925c16f964da208f352a9",
-		// 		// 	// width: { min: 1280 },
-		// 		// 	// height: { min: 720 }
-		// 		// },
-		// 		// optional: [{ maxFrameRate: 10 }]
-		// 	},
-		// 	audio: false
-		// };
+		this.videoConstraints = {
+			video: {
+				//deviceId: "8ad18b14be78d5312e2054d10bbe66248887a3baa2d69e9ec014b45e85861d6d",
+				// width: { min: 1280 },
+				// height: { min: 720 },
+				// mandatory: {
+				// 	// width: { min: 1280 },
+				// 	// height: { min: 720 }
+				// },
+				// optional: [{ maxFrameRate: 10 }]
+			},
+			audio: false
+		};
 
 		//size for the image div (defined by window size)
 		this.imageWidth = null;
