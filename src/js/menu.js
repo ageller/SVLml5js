@@ -72,9 +72,13 @@ function populateMenu(data){
 		.on('click', function(e){
 			//load a blank model and add back in all the training images
 			loadEmptyModel();
-			params.loadingImagesToModel = true;
-			params.addNextImageToModel = true;
+			params.video.pause();
 			params.trainingImageI = 0;
+			loadImageToModel();
+
+			params.loadingImagesToModel = true;
+			// params.loadNextImageForModel = true;
+			// params.addNextImageToModel = false;
 
 			resetInfo();
 			params.showingTraining = !params.showingTraining;
@@ -138,7 +142,7 @@ function populateMenu(data){
 			if (params.useBackground){
 				elem.text('Turn Off Background Subtraction')
 			} else {
-				elem.text('Background Subtraction Off')
+				elem.text('Turn On Background Subtraction')
 			}
 
 		})

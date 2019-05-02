@@ -122,11 +122,6 @@ function draw() {
 		params.initialCapture = false;
 	}
 
-	//for training
-	if (params.loadingImagesToModel && params.addNextImageToModel && params.readyModel && params.readyVideo){
-		params.video.pause();
-		addImageToModel();
-	}
 
 	//for background subtraction
 	if (params.readyVideo && !params.loadingImagesToModel){
@@ -140,37 +135,43 @@ function draw() {
 
 	}
 
+	if (params.readyModel && params.readyVideo && !params.loadingImagesToModel){
+		//for training
+		// if (params.loadingImagesToModel && params.loadNextImageForModel){
+		// 	params.video.pause();
+		// 	loadImageToModel();
+		// }
 
-	// Flip the canvas so that we get a mirror image
-	//and seems like I need to scale this by 0.5 to see the full image?? something is wrong here.
-	var fac = 1.0
-	translate(fac*params.videoWidth, 0);
-	scale(-fac, fac);
-	//scale(-1.0,1.0);    // flip x-axis backwards
+		// Flip the canvas so that we get a mirror image
+		var fac = 1.0
+		translate(fac*params.videoWidth, 0);
+		scale(-fac, fac);
+		//scale(-1.0,1.0);    // flip x-axis backwards
 
-	if (params.showBackgroundSubtractedVideo || params.showingTraining){
-		image(params.video, 0, 0, params.videoWidth, params.videoHeight);// 
-	} else {
-		image(params.videoShow, 0, 0, params.videoWidth, params.videoHeight);// 
+		if (params.showBackgroundSubtractedVideo || params.showingTraining){
+			image(params.video, 0, 0, params.videoWidth, params.videoHeight);// 
+		} else {
+			image(params.videoShow, 0, 0, params.videoWidth, params.videoHeight);// 
+		}
+
+
+		//do the classification?
+		if (params.doClassify && !params.initialCapture){ 
+			classify();
+		} 
+
+		// add the label (not sure how to locate this, given the current fullscreen setup)
+		// fill('gray');
+		// textSize(20);
+		// stroke('gray');
+		// strokeWeight(1);
+		// // Flip back for the text (but this doesn't work when not fullscreened because of clipping)
+		// scale(-1.0, 1.0);	
+		// translate(-params.videoWidth, 0);
+		// text(params.label, 10, params.videoHeight - params.windowHeight/params.videoFac - 10); //something is not right here
+
+		if (params.doClassify && params.drawLine){
+			drawLines();
+		}
 	}
-
-	//do the classification?
-	if (params.readyModel && params.readyVideo && params.doClassify && !params.initialCapture && !params.loadingImagesToModel){ 
-		classify();
-	} 
-
-	// add the label
-	// fill('gray');
-	// textSize(20);
-	// stroke('gray');
-	// strokeWeight(1);
-	// // Flip back for the text (but this doesn't work when not fullscreened because of clipping)
-	// scale(-1.0, 1.0);	
-	// translate(-params.videoWidth, 0);
-	// text(params.label, 10, params.videoHeight - params.windowHeight/params.videoFac - 10); //something is not right here
-
-	if (params.readyVideo && params.doClassify && params.drawLine){
-		drawLines();
-	}
-
 }

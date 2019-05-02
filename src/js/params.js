@@ -17,10 +17,11 @@ function defineParams(){
 		this.confidenceLim = 0.99; //limit before object is considered identified.
 		this.loadingImagesToModel = false; //will be true if we are reloading images into the model
 		this.trainingImageI = 0;//counter for the trainingImageList
-		this.addNextImageToModel = false; //check to see if the image is done being added to the model
+		this.loadNextImageForModel = false; //check to see if the image is done being loaded for the model
 		this.trainingImageID = null; //will contain the id of the image for training from previous model
 		this.trainingImage = null;// will hold the current training image
-		
+		this.trainingImageDelay = 1000;//ms time between loading images... would like to use a callback, but can't figure that out
+
 		//related to the p5js video
     	this.video = null; //holds the p5js video object that we use to classify (can use background sub)
     	this.videoShow = null; //holds the p5js video object that we show the user

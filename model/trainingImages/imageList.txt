@@ -29,8 +29,6 @@ model/trainingImages/Cassiopeia A_026_0.png
 model/trainingImages/Cassiopeia A_027_0.png
 model/trainingImages/Cassiopeia A_028_0.png
 model/trainingImages/Cassiopeia A_029_0.png
-model/trainingImages/Cassiopeia A_040_0.png
-model/trainingImages/Cassiopeia A_041_0.png
 model/trainingImages/Eta Carinae_000_0.png
 model/trainingImages/Eta Carinae_001_0.png
 model/trainingImages/Eta Carinae_002_0.png
@@ -42,10 +40,6 @@ model/trainingImages/Eta Carinae_007_0.png
 model/trainingImages/Eta Carinae_008_0.png
 model/trainingImages/Eta Carinae_009_0.png
 model/trainingImages/Eta Carinae_010_0.png
-model/trainingImages/Eta Carinae_011_0.png
-model/trainingImages/Eta Carinae_012_0.png
-model/trainingImages/Eta Carinae_013_0.png
-model/trainingImages/Eta Carinae_014_0.png
 model/trainingImages/Eta Carinae_015_0.png
 model/trainingImages/Eta Carinae_016_0.png
 model/trainingImages/Eta Carinae_017_0.png
@@ -108,9 +102,6 @@ model/trainingImages/New Horizons_033_0.png
 model/trainingImages/New Horizons_034_0.png
 model/trainingImages/New Horizons_035_0.png
 model/trainingImages/New Horizons_036_0.png
-model/trainingImages/New Horizons_037_0.png
-model/trainingImages/New Horizons_038_0.png
-model/trainingImages/New Horizons_039_0.png
 model/trainingImages/SN 1987a_000_0.png
 model/trainingImages/SN 1987a_001_0.png
 model/trainingImages/SN 1987a_002_0.png
@@ -135,5 +126,3 @@ model/trainingImages/SN 1987a_020_0.png
 model/trainingImages/SN 1987a_021_0.png
 model/trainingImages/SN 1987a_022_0.png
 model/trainingImages/SN 1987a_023_0.png
-model/trainingImages/SN 1987a_040_0.png
-model/trainingImages/SN 1987a_041_0.png
