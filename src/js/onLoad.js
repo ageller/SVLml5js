@@ -68,31 +68,35 @@ Promise.all([
 
 
 
-// //testing the threshold values
-// d3.select('#infoDiv').append('input')
-// 	.on('keypress', function(){
-// 		var key = d3.event.key;
-// 		if (key == 'q'){
-// 			params.rhoBackground += 0.001;
-// 		}
-// 		if (key == 'a'){
-// 			params.rhoBackground -= 0.001;
-// 		}
-// 		if (key == 'w'){
-// 			params.backgroundChi2Threshold += 1;
-// 		}
-// 		if (key == 's'){
-// 			params.backgroundChi2Threshold -= 1;
-// 		}
-// 		if (key == 'e'){
-// 			params.backgroundVarianceThreshold += 1;
-// 		}
-// 		if (key == 'd'){
-// 			params.backgroundVarianceThreshold -= 1;
-// 		}	
-// 		console.log(params.rhoBackground, params.backgroundChi2Threshold, params.backgroundVarianceThreshold)					
+// //testing the background subtraction values
+// d3.select('body').on('keydown', function(){
+// 	var key = d3.event.key;
+// 	if (key == 'q'){
+// 		params.openCVhistory += 10;
+// 	}
+// 	if (key == 'a'){
+// 		params.openCVhistory -= 10;
+// 	}
+// 	if (key == 'w'){
+// 		params.openCVvarThreshold += 1;
+// 	}
+// 	if (key == 's'){
+// 		params.openCVvarThreshold -= 1;
+// 	}
+// 	if (key == 'e'){
+// 		params.openCVlearningRate += 0.1;
+// 	}
+// 	if (key == 'd'){
+// 		params.openCVlearningRate -= 0.1;
+// 	}
+// 	if (key == 'r'){
+// 		params.openCVdetectShadows = !params.openCVdetectShadows;
+// 	}
 
-// 	})
+// 	console.log(params.openCVhistory, params.openCVvarThreshold, params.openCVdetectShadows, params.openCVlearningRate);
+// 	params.openCVfgbg = new cv.BackgroundSubtractorMOG2(params.openCVhistory, params.openCVvarThreshold, params.openCVdetectShadows);	
+
+// })
 
 //list available devices
 if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {

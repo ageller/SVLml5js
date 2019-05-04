@@ -106,6 +106,7 @@ function defineParams(){
 		this.openCVhistory = 500;
 		this.openCVvarThreshold = 16;
 		this.openCVdetectShadows = true;
+		this.openCVlearningRate = -1;
 
 		//if we want to scanning draw the line on top of the video (might be fun... or distracting)
 		this.drawLine = false; //set to true to draw the line

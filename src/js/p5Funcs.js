@@ -128,19 +128,10 @@ function draw() {
 		params.video.loadPixels();
 		if (params.useBackground && params.readyOpenCV){
 			params.openCVcap.read(params.openCVframe);
-        	params.openCVfgbg.apply(params.openCVframe, params.openCVfgmask);
+        	params.openCVfgbg.apply(params.openCVframe, params.openCVfgmask, params.openCVlearningRate);
         	applyOpenCVmaskToP5(params.openCVfgmask);
 			params.video.updatePixels(); //p5js library
 		}
-
-	}
-
-	if (params.readyModel && params.readyVideo && !params.loadingImagesToModel){
-		//for training
-		// if (params.loadingImagesToModel && params.loadNextImageForModel){
-		// 	params.video.pause();
-		// 	loadImageToModel();
-		// }
 
 		// Flip the canvas so that we get a mirror image
 		var fac = 1.0
@@ -154,10 +145,19 @@ function draw() {
 			image(params.videoShow, 0, 0, params.videoWidth, params.videoHeight);// 
 		}
 
+	}
+
+	if (params.readyModel && params.readyVideo && !params.loadingImagesToModel){
+		//for training
+		// if (params.loadingImagesToModel && params.loadNextImageForModel){
+		// 	params.video.pause();
+		// 	loadImageToModel();
+		// }
+
 
 		//do the classification?
 		if (params.doClassify && !params.initialCapture){ 
-			classify();
+			//classify();
 		} 
 
 		// add the label (not sure how to locate this, given the current fullscreen setup)
