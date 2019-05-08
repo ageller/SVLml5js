@@ -157,7 +157,7 @@ function draw() {
 
 		//do the classification?
 		if (params.doClassify && !params.initialCapture){ 
-			//classify();
+			classify();
 		} 
 
 		// add the label (not sure how to locate this, given the current fullscreen setup)
