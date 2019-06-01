@@ -43,8 +43,6 @@ function loadAllImages(images){
 				if (index == 0){
 					showCaption(params.captionsAvail[index]);
 				}
-				console.log('image', h2, h, offset)
-
 			})
 
 }
