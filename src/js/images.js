@@ -43,6 +43,7 @@ function loadAllImages(images){
 				if (index == 0){
 					showCaption(params.captionsAvail[index]);
 				}
+				console.log('image', h2, h, offset)
 
 			})
 
@@ -82,16 +83,16 @@ function slideImageDivMoved(){
 			// params.dragImageVx = s*Math.max(Math.abs(params.dragImageVx),Math.abs(diffX/dt));
 			var left = parseFloat(d3.select('#imageDiv').style('left'));
 			if (params.allImageDivs[params.imgI]){
-				var top = parseFloat(params.allImageDivs[params.imgI].style('top'));
 				var hi = parseFloat(params.allImageDivs[params.imgI].attr('height'))
-				var newTop = Math.max(Math.min(top+diffY, 0), params.windowHeight - hi);
-
-				//console.log('testing3', x1, x2, dt, diffX, diffY, top, newTop, left, params.dragImageVx, params.dragImageSamples, hi)
-				//console.log('testing3', y1, y2, diffY, top, newTop, hi, params.windowHeight)
-
+				var h = parseFloat(d3.select('#imageDiv').style('height'));
+				if (hi > h){
+					var top = parseFloat(params.allImageDivs[params.imgI].style('top'));
+					var newTop = Math.max(Math.min(top+diffY, 0), params.windowHeight - hi);
+					console.log('top', top, newTop, hi)
+					params.allImageDivs[params.imgI].style('top', newTop+'px')
+				}
 				d3.select('#imageDiv')
 					.style('left', (left+diffX)+'px')
-				params.allImageDivs[params.imgI].style('top', newTop+'px')
 			}
 		}
 	}
